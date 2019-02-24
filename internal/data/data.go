@@ -1,40 +1,18 @@
 package data
 
 import (
+	"github.com/jmoiron/sqlx"
 	"gopkg.in/reform.v1"
 )
 
-//go:generate go run github.com/fpawel/goutils/dbutils/sqlstr/...
+//go:generate go run github.com/fpawel/elco/cmd/utils/sqlstr/...
 
-func Products(db *reform.DB, partyID int64, products *[]Product) error {
-	rows, err := db.SelectRows(ProductTable, "WHERE party_id = ? ORDER BY place",
-		partyID)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = rows.Close()
-	}()
+//reform-db -db-driver=postgres -db-source="host=localhost port=5432 user=mil82 dbname=mil82 password=1 sslmode=disable" init
 
-	for {
-		var product Product
-		err = db.NextRow(&product, rows)
-		if err == reform.ErrNoRows {
-			break
-		}
-		if err != nil {
-			return err
-		}
-		*products = append(*products, product)
-	}
-	return nil
-}
-
-func  LastParty(db *reform.DB, party *Party) error {
-	err :=db.SelectOneTo(party, `ORDER BY created_at DESC LIMIT 1;`)
-	if err == reform.ErrNoRows{
-		*party = Party{}
-		return db.Insert(party)
+func LastParty(db *sqlx.DB, party *Party) error {
+	err := db.Get(party, `SELECT * FROM party ORDER BY created_at DESC LIMIT 1;`)
+	if err == reform.ErrNoRows {
+		return db.Get(party, `INSERT INTO party DEFAULT VALUES; SELECT * FROM party ORDER BY created_at DESC LIMIT 1`)
 	}
 	return err
 }
