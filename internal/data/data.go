@@ -12,7 +12,7 @@ import (
 func LastParty(db *sqlx.DB, party *Party) error {
 	err := db.Get(party, `SELECT * FROM party ORDER BY created_at DESC LIMIT 1;`)
 	if err == reform.ErrNoRows {
-		return db.Get(party, `INSERT INTO party DEFAULT VALUES; SELECT * FROM party ORDER BY created_at DESC LIMIT 1`)
+		return db.Get(party, `INSERT INTO party DEFAULT VALUES RETURNING *`)
 	}
 	return err
 }
