@@ -1,78 +1,117 @@
-DO $$
-  BEGIN
-    CREATE TYPE SCALE_GAS_TYPE AS ENUM ( 'gas1', 'gas2', 'gas3');
-    CREATE TYPE LIN_GAS_TYPE AS ENUM ( 'gas1', 'gas2', 'gas3', 'gas4', 'gas5');
-    CREATE TYPE SCALE_TEMPERATURE_TYPE AS ENUM ( 'temperature_minus', 'temperature_norm', 'temperature_plus', 'temperature90');
-    CREATE TYPE PRODUCT_TEST_TYPE AS ENUM (
-      'test_norm', 'test_minus', 'test_plus', 'test90', 'test_norm2', 'test2', 'test3');
-  EXCEPTION
-    WHEN duplicate_object THEN null;
-  END $$;
+PRAGMA foreign_keys = ON;
+PRAGMA encoding = 'UTF-8';
 
 CREATE TABLE IF NOT EXISTS party
 (
-  party_id          SERIAL PRIMARY KEY       NOT NULL,
-  created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  product_type      TEXT                     NOT NULL DEFAULT '00.01',
-  pgs1              REAL                     NOT NULL DEFAULT 0 CHECK (pgs1 >= 0),
-  pgs2              REAL                     NOT NULL DEFAULT 50 CHECK (pgs2 >= 0),
-  pgs3              REAL                     NOT NULL DEFAULT 100 CHECK (pgs3 >= 0),
-  pgs_lin_12        REAL                     NOT NULL DEFAULT 25 CHECK (pgs_lin_12 >= 0),
-  pgs_lin_22        REAL                     NOT NULL DEFAULT 25 CHECK (pgs_lin_22 >= 0),
-  temperature_norm  REAL                     NOT NULL DEFAULT 20,
-  temperature_minus REAL                     NOT NULL DEFAULT -60,
-  temperature_plus  REAL                     NOT NULL DEFAULT 80
+    party_id     INTEGER PRIMARY KEY NOT NULL,
+    created_at   TIMESTAMP           NOT NULL DEFAULT (DATETIME('now', '+3 hours')),
+    product_type TEXT                NOT NULL DEFAULT '00.01',
+    c1           REAL                NOT NULL DEFAULT 0 CHECK (c1 >= 0),
+    c2           REAL                NOT NULL DEFAULT 25 CHECK (c2 >= 0),
+    c3           REAL                NOT NULL DEFAULT 50 CHECK (c3 >= 0),
+    c4           REAL                NOT NULL DEFAULT 100 CHECK (c4 >= 0)
 );
 
 CREATE TABLE IF NOT EXISTS product
 (
-  product_id    SERIAL PRIMARY KEY NOT NULL,
-  party_id      INTEGER            NOT NULL,
-  serial_number SMALLINT           NOT NULL CHECK (serial_number > 0 ),
-  place         SMALLINT           NOT NULL CHECK (place >= 0),
-  addr          SMALLINT           NOT NULL CHECK (addr > 0),
-  production    BOOLEAN            NOT NULL DEFAULT FALSE,
-  UNIQUE (party_id, addr),
-  UNIQUE (party_id, place),
-  UNIQUE (party_id, serial_number),
-  FOREIGN KEY (party_id) REFERENCES party (party_id) ON DELETE CASCADE
+    product_id INTEGER PRIMARY KEY NOT NULL,
+    party_id   INTEGER             NOT NULL,
+    serial     SMALLINT            NOT NULL CHECK (serial > 0 ),
+    addr       SMALLINT            NOT NULL CHECK (addr > 0),
+    UNIQUE (party_id, addr),
+    UNIQUE (party_id, serial),
+    FOREIGN KEY (party_id) REFERENCES party (party_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS product_checkup
+CREATE TABLE IF NOT EXISTS work
 (
-  product_id INTEGER NOT NULL,
-  test       PRODUCT_TEST_TYPE,
-  gas        SCALE_GAS_TYPE,
-  value      REAL    NOT NULL,
-  PRIMARY KEY (product_id, test, gas),
-  FOREIGN KEY (product_id) REFERENCES product (product_id) ON DELETE CASCADE
+    work TEXT NOT NULL PRIMARY KEY
+);
+
+INSERT OR IGNORE INTO work
+VALUES ('lin'),
+       ('temp'),
+       ('checkup'),
+       ('tex1'),
+       ('tex2');
+
+CREATE TABLE IF NOT EXISTS temp
+(
+    temp TEXT NOT NULL PRIMARY KEY
+);
+
+INSERT OR IGNORE INTO temp
+VALUES ('-'),
+       ('20'),
+       ('+'),
+       ('90');
+
+CREATE TABLE IF NOT EXISTS gas
+(
+    gas INTEGER NOT NULL PRIMARY KEY
+);
+
+INSERT OR IGNORE INTO temp
+VALUES (1),
+       (2),
+       (3),
+       (4);
+
+CREATE TABLE IF NOT EXISTS var
+(
+    var INTEGER NOT NULL PRIMARY KEY
+);
+INSERT OR IGNORE INTO var
+VALUES (0),
+       (2),
+       (4),
+       (8),
+       (10),
+       (12),
+       (14),
+       (16);
+
+
+CREATE TABLE IF NOT EXISTS product_value
+(
+    product_id INTEGER NOT NULL,
+    var        INTEGER NOT NULL,
+    work       TEXT    NOT NULL,
+    gas        INTEGER NOT NULL,
+    temp       TEXT    NOT NULL,
+    value      REAL    NOT NULL,
+    PRIMARY KEY (product_id, var, work, gas, temp),
+    FOREIGN KEY (product_id) REFERENCES product (product_id) ON DELETE CASCADE,
+    FOREIGN KEY (var) REFERENCES var (var),
+    FOREIGN KEY (work) REFERENCES work (work),
+    FOREIGN KEY (gas) REFERENCES gas (gas),
+    FOREIGN KEY (temp) REFERENCES temp (temp)
 );
 
 CREATE TABLE IF NOT EXISTS product_coefficient
 (
-  product_id  INTEGER NOT NULL,
-  coefficient INTEGER NOT NULL CHECK ( coefficient >= 0 ),
-  value       REAL    NOT NULL,
-  PRIMARY KEY (product_id, coefficient),
-  FOREIGN KEY (product_id) REFERENCES product (product_id) ON DELETE CASCADE
+    product_id  INTEGER NOT NULL,
+    coefficient INTEGER NOT NULL CHECK ( coefficient >= 0 ),
+    value       REAL    NOT NULL,
+    PRIMARY KEY (product_id, coefficient),
+    FOREIGN KEY (product_id) REFERENCES product (product_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS product_lin
-(
-  product_id INTEGER      NOT NULL,
-  gas        LIN_GAS_TYPE NOT NULL,
-  value      REAL         NOT NULL,
-  PRIMARY KEY (product_id, gas),
-  FOREIGN KEY (product_id) REFERENCES product (product_id) ON DELETE CASCADE
-);
+CREATE VIEW IF NOT EXISTS last_party AS
+SELECT party_id
+FROM party
+ORDER BY created_at DESC
+LIMIT 1;
 
-CREATE TABLE IF NOT EXISTS product_temperature_comp
-(
-  product_id        INTEGER                NOT NULL,
-  gas               SCALE_GAS_TYPE         NOT NULL,
-  temperature       SCALE_TEMPERATURE_TYPE NOT NULL,
-  temperature_value REAL                   NOT NULL,
-  value             REAL                   NOT NULL,
-  PRIMARY KEY (product_id, temperature, gas),
-  FOREIGN KEY (product_id) REFERENCES product (product_id) ON DELETE CASCADE
-);
+
+CREATE VIEW IF NOT EXISTS last_party_products1 AS
+SELECT *
+FROM product
+WHERE product_id = (SELECT party_id FROM last_party);
+
+CREATE VIEW IF NOT EXISTS last_party_products AS
+SELECT count(*) - 1 AS place, cur.*
+FROM (SELECT * FROM last_party_products1) AS cur
+         LEFT JOIN (SELECT * FROM last_party_products1) AS oth
+WHERE cur.product_id >= oth.product_id
+GROUP BY cur.product_id;

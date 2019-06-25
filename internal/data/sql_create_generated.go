@@ -1,81 +1,65 @@
 package data
 
 const SQLCreate = `
-DO $$
-  BEGIN
-    CREATE TYPE SCALE_GAS_TYPE AS ENUM ( 'gas1', 'gas2', 'gas3');
-    CREATE TYPE LIN_GAS_TYPE AS ENUM ( 'gas1', 'gas2', 'gas3', 'gas4', 'gas5');
-    CREATE TYPE SCALE_TEMPERATURE_TYPE AS ENUM ( 'temperature_minus', 'temperature_norm', 'temperature_plus', 'temperature90');
-    CREATE TYPE PRODUCT_TEST_TYPE AS ENUM (
-      'test_norm', 'test_minus', 'test_plus', 'test90', 'test_norm2', 'test2', 'test3');
-  EXCEPTION
-    WHEN duplicate_object THEN null;
-  END $$;
+PRAGMA foreign_keys = ON;
+PRAGMA encoding = 'UTF-8';
 
 CREATE TABLE IF NOT EXISTS party
 (
-  party_id          SERIAL PRIMARY KEY       NOT NULL,
-  created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  product_type      TEXT                     NOT NULL DEFAULT '00.01',
-  pgs1              REAL                     NOT NULL DEFAULT 0 CHECK (pgs1 >= 0),
-  pgs2              REAL                     NOT NULL DEFAULT 50 CHECK (pgs2 >= 0),
-  pgs3              REAL                     NOT NULL DEFAULT 100 CHECK (pgs3 >= 0),
-  pgs_lin           REAL                     NOT NULL DEFAULT 25 CHECK (pgs_lin >= 0),
-  temperature_norm  REAL                     NOT NULL DEFAULT 20,
-  temperature_minus REAL                     NOT NULL DEFAULT -60,
-  temperature_plus  REAL                     NOT NULL DEFAULT 80
+    party_id              INTEGER PRIMARY KEY NOT NULL,
+    created_at            TIMESTAMP           NOT NULL DEFAULT (DATETIME('now', '+3 hours')),
+    product_type          TEXT                NOT NULL DEFAULT '00.01',
+    concentration_beg     REAL                NOT NULL DEFAULT 0 CHECK (concentration_beg >= 0),
+    concentration_middle2 REAL                NOT NULL DEFAULT 25 CHECK (concentration_middle2 >= 0),
+    concentration_middle  REAL                NOT NULL DEFAULT 50 CHECK (concentration_middle >= 0),
+    concentration_end     REAL                NOT NULL DEFAULT 100 CHECK (concentration_end >= 0),
+    temp_low              REAL                NOT NULL DEFAULT -60,
+    temp_norm             REAL                NOT NULL DEFAULT 20,
+    temp_high             REAL                NOT NULL DEFAULT 60,
+    temp_90               REAL                NOT NULL DEFAULT 90
 );
 
 CREATE TABLE IF NOT EXISTS product
 (
-  product_id    SERIAL PRIMARY KEY NOT NULL,
-  party_id      INTEGER            NOT NULL,
-  serial_number SMALLINT           NOT NULL CHECK (serial_number > 0 ),
-  place         SMALLINT           NOT NULL CHECK (place >= 0),
-  addr          SMALLINT           NOT NULL CHECK (addr > 0),
-  production    BOOLEAN            NOT NULL DEFAULT FALSE,
-  UNIQUE (party_id, addr),
-  UNIQUE (party_id, place),
-  UNIQUE (party_id, serial_number),
-  FOREIGN KEY (party_id) REFERENCES party (party_id) ON DELETE CASCADE
+    product_id INTEGER PRIMARY KEY NOT NULL,
+    party_id   INTEGER             NOT NULL,
+    serial     SMALLINT            NOT NULL CHECK (serial > 0 ),
+    addr       SMALLINT            NOT NULL CHECK (addr > 0),
+    production BOOLEAN             NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (party_id) REFERENCES party (party_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS product_checkup
+CREATE UNIQUE INDEX unique_product_party_id_addr ON product (party_id, addr);
+CREATE UNIQUE INDEX unique_product_party_id_serial ON product (party_id, serial);
+
+CREATE TABLE IF NOT EXISTS product_temp_value
 (
-  product_id      INTEGER            NOT NULL,
-  test            PRODUCT_TEST_TYPE,
-  gas             SCALE_GAS_TYPE,
-  value           REAL               NOT NULL,
-  PRIMARY KEY (product_id, test, gas),
-  FOREIGN KEY (product_id) REFERENCES product (product_id) ON DELETE CASCADE
+    product_id INTEGER NOT NULL,
+    var     INTEGER NOT NULL CHECK (var >= 0),
+    gas        TEXT    NOT NULL CHECK ( gas IN ('beg', 'mid', 'end') ),
+    temp       TEXT    NOT NULL CHECK ( temp IN ('low', 'norm', 'high') ),
+    value      REAL    NOT NULL,
+    PRIMARY KEY (product_id, var, gas, temp),
+    FOREIGN KEY (product_id) REFERENCES product (product_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS product_work_value
+(
+    product_id INTEGER NOT NULL,
+    var     INTEGER NOT NULL CHECK (var >= 0),
+    work       TEXT    NOT NULL CHECK ( temp IN ('lin', 'checkup', 'tex1', 'tex2') ),
+    gas        TEXT    NOT NULL CHECK ( gas IN ('gas1', 'gas2', 'gas3', 'gas4') ),
+    temp       TEXT    NOT NULL CHECK ( temp IN ('low', 'norm', 'high', '90') ),
+    value      REAL    NOT NULL,
+    PRIMARY KEY (product_id, var, work, gas, temp),
+    FOREIGN KEY (product_id) REFERENCES product (product_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS product_coefficient
 (
-  product_id             INTEGER            NOT NULL,
-  coefficient            INTEGER            NOT NULL CHECK ( coefficient >= 0 ),
-  value                  REAL               NOT NULL,
-  PRIMARY KEY (product_id, coefficient),
-  FOREIGN KEY (product_id) REFERENCES product (product_id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS product_lin
-(
-  product_id     INTEGER            NOT NULL,
-  gas            LIN_GAS_TYPE       NOT NULL,
-  value          REAL               NOT NULL,
-  PRIMARY KEY (product_id, gas),
-  FOREIGN KEY (product_id) REFERENCES product (product_id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS product_temperature_comp
-(
-  product_id                  INTEGER                NOT NULL,
-  gas                         SCALE_GAS_TYPE         NOT NULL,
-  temperature                 SCALE_TEMPERATURE_TYPE NOT NULL,
-  temperature_value           REAL                   NOT NULL,
-  value                       REAL                   NOT NULL,
-  PRIMARY KEY (product_id, temperature, gas),
-  FOREIGN KEY (product_id) REFERENCES product (product_id) ON DELETE CASCADE
-);
-`
+    product_id  INTEGER NOT NULL,
+    coefficient INTEGER NOT NULL CHECK ( coefficient >= 0 ),
+    value       REAL    NOT NULL,
+    PRIMARY KEY (product_id, coefficient),
+    FOREIGN KEY (product_id) REFERENCES product (product_id) ON DELETE CASCADE
+);`
