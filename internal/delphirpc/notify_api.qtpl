@@ -1,0 +1,37 @@
+// // Code generated. DO NOT EDIT.
+{% package delphirpc %}
+
+{% func (x *NotifyServicesSrc) GoFile() %}
+package notify
+
+import (
+	{% for imp := range x.goImports %}"{%s imp %}"
+    {% endfor %}
+)
+
+type msg int
+
+const (
+    msg{%s x.services[0].serviceName %} msg = iota
+    {% for _,m := range x.services[1:] %}msg{%s m.serviceName %}
+    {% endfor %}
+)
+
+{% for _,m := range x.services %}func {%s m.serviceName %}(log *structlog.Logger, arg {%s m.goType %}) {
+    if log != nil {
+        log.Debug(internal.PeerWindowClassName, "{%s m.serviceName %}", arg, "MSG", msg{%s m.serviceName %})
+    }
+    W.{%s m.notifyFunc %}( uintptr(msg{%s m.serviceName %}), {%s= m.instructionArg %} )
+}
+{% if m.notifyFunc == "NotifyStr" %}
+func {%s m.serviceName %}f(log *structlog.Logger, format string, a ...interface{}) {
+    if log != nil {
+        log.Debug(internal.PeerWindowClassName, "{%s m.serviceName %}", fmt.Sprintf(format,a...), "MSG", msg{%s m.serviceName %})
+    }
+    W.Notifyf( uintptr(msg{%s m.serviceName %}), format, a... )
+}{% endif %}
+{% endfor %}
+
+
+
+{% endfunc %}

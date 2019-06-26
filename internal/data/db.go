@@ -2,12 +2,15 @@ package data
 
 import (
 	"database/sql"
-	"github.com/ansel1/merry"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/powerman/must"
 	"github.com/powerman/structlog"
 	"os"
 	"path/filepath"
 )
+
+//go:generate go run github.com/fpawel/gohelp/cmd/sqlstr/...
 
 var (
 	DB  *sqlx.DB
@@ -20,12 +23,12 @@ func Open(createNew bool) {
 		dir = filepath.Dir(os.Args[0])
 	}
 	fileName := filepath.Join(dir, "mil82.sqlite")
+	if _, err := os.Stat(fileName); os.IsNotExist(err) || createNew {
+		createNew = true
+	}
 	if createNew {
-		if _, err := os.Stat(fileName); err == nil {
-			if err := os.Remove(fileName); err != nil {
-				panic(merry.Appendf(err, "unable to delete database file: %s", fileName))
-			}
-		}
+		must.Remove(fileName)
+		log.Warn(fileName + " removed")
 	}
 	dbConn, err := sql.Open("sqlite3", fileName)
 	if err != nil {
@@ -35,9 +38,7 @@ func Open(createNew bool) {
 	dbConn.SetMaxOpenConns(1)
 	dbConn.SetConnMaxLifetime(0)
 
-	if _, err = dbConn.Exec(SQLCreate); err != nil {
-		panic(err)
-	}
 	log.Info("open: " + fileName)
 	DB = sqlx.NewDb(dbConn, "sqlite3")
+	DB.MustExec(SQLCreate)
 }

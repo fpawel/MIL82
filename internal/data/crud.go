@@ -15,12 +15,3 @@ func LastParty() (party Party) {
 	}
 	return
 }
-
-func LastPartyProducts() (products []Product) {
-	err := DB.Select(&products,
-		`SELECT * FROM product WHERE party_id = (SELECT party_id FROM last_party)`)
-	if err != nil {
-		panic(err)
-	}
-	return
-}
