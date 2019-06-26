@@ -29,11 +29,11 @@ CREATE TABLE IF NOT EXISTS work
 );
 
 INSERT OR IGNORE INTO work
-VALUES ('lin'),
-       ('temp'),
-       ('checkup'),
-       ('tex1'),
-       ('tex2');
+VALUES ('work_lin'),
+       ('work_temp'),
+       ('work_checkup'),
+       ('work_tex1'),
+       ('work_tex2');
 
 CREATE TABLE IF NOT EXISTS temp
 (
@@ -41,10 +41,10 @@ CREATE TABLE IF NOT EXISTS temp
 );
 
 INSERT OR IGNORE INTO temp
-VALUES ('-'),
-       ('20'),
-       ('+'),
-       ('90');
+VALUES ('temp_minus'),
+       ('temp_20'),
+       ('temp_plus'),
+       ('temp_90');
 
 CREATE TABLE IF NOT EXISTS gas
 (
@@ -59,17 +59,18 @@ VALUES (1),
 
 CREATE TABLE IF NOT EXISTS var
 (
-    var INTEGER NOT NULL PRIMARY KEY
+    var INTEGER NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL
 );
 INSERT OR IGNORE INTO var
-VALUES (0),
-       (2),
-       (4),
-       (8),
-       (10),
-       (12),
-       (14),
-       (16);
+VALUES (0, 'концентрация'),
+       (2, 'температура'),
+       (4, 'ток излучателя'),
+       (8, 'var8'),
+       (10, 'var10'),
+       (12, 'рабочий'),
+       (14, 'опорный'),
+       (16, 'var16');
 
 
 CREATE TABLE IF NOT EXISTS product_value
