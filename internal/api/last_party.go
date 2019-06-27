@@ -3,19 +3,61 @@ package api
 import (
 	"github.com/fpawel/mil82/internal/cfg"
 	"github.com/fpawel/mil82/internal/data"
+	"strconv"
 )
 
 type LastPartySvc struct{}
 
 type LastPartyProduct struct {
 	data.Product
-	Place   int    `db:"-"`
-	Checked bool   `db:"-"`
-	Error   string `db:"-"`
+	Place   int
+	Checked bool
 }
 
-func (_ *LastPartySvc) Party(_ struct{}, r *data.Party) error {
+func (_ *LastPartySvc) Settings(_ struct{}, r *data.Party) error {
 	*r = data.LastParty()
+	return nil
+}
+
+func (_ *LastPartySvc) SetSettings(x struct {
+	ProductType    string
+	C1, C2, C3, C4 float32
+}, _ *struct{}) error {
+	data.DB.MustExec(`
+UPDATE party SET product_type = ? AND c1 = ? AND c2 = ? AND c3 = ? AND c4 = ?
+WHERE party_id = (SELECT last_party.party_id FROM last_party)`,
+		x.ProductType, x.C1, x.C2, x.C3, x.C4)
+	return nil
+}
+
+func (_ *LastPartySvc) SetProductSerial(x struct {
+	ProductID int64
+	SerialStr string
+}, _ *struct{}) error {
+
+	serial, err := strconv.Atoi(x.SerialStr)
+	if err != nil {
+		return err
+	}
+	_, err = data.DB.Exec(`UPDATE product SET serial = ? WHERE product_id = ?`, serial, x.ProductID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (_ *LastPartySvc) SetProductAddr(x struct {
+	ProductID int64
+	AddrStr   string
+}, _ *struct{}) error {
+	addr, err := strconv.Atoi(x.AddrStr)
+	if err != nil {
+		return err
+	}
+	_, err = data.DB.Exec(`UPDATE product SET addr = ? WHERE product_id = ?`, addr, x.ProductID)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -72,9 +114,9 @@ func getLastPartyProducts2(r *[]LastPartyProduct) error {
 	}
 	c := cfg.Get()
 	for i := range *r {
-		(*r)[i].Place = i
-		_, f := c.PlacesUncheck[i]
-		(*r)[i].Checked = !f
+		x := &(*r)[i]
+		x.Place = i
+		x.Checked = c.PlaceChecked(i)
 	}
 	return nil
 }

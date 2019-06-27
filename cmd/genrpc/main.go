@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/fpawel/gohelp/must"
 	"github.com/fpawel/gohelp/winapp"
 	"github.com/fpawel/mil82/internal/api"
 	"github.com/fpawel/mil82/internal/delphirpc"
-	"github.com/powerman/must"
 	"os"
 	"path/filepath"
 	r "reflect"

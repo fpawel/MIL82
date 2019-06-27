@@ -1,8 +1,8 @@
 package app
 
 import (
+	"github.com/fpawel/gohelp/must"
 	"github.com/fpawel/mil82/internal/api"
-	"github.com/powerman/must"
 	"github.com/powerman/rpc-codec/jsonrpc2"
 	"golang.org/x/sys/windows/registry"
 	"net"

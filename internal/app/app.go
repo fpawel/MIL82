@@ -2,12 +2,12 @@ package app
 
 import (
 	"context"
-	"github.com/ansel1/merry"
+	"github.com/fpawel/gohelp/must"
 	"github.com/fpawel/mil82/internal/api/notify"
+	"github.com/fpawel/mil82/internal/cfg"
 	"github.com/fpawel/mil82/internal/data"
 	"github.com/getlantern/systray"
 	"github.com/lxn/win"
-	"github.com/powerman/must"
 	"github.com/powerman/structlog"
 	"os"
 	"os/exec"
@@ -17,6 +17,7 @@ import (
 func Run() {
 	initLog()
 	data.Open(false)
+	cfg.Open()
 	notify.InitWindow("")
 	go sysTray(notify.W.CloseWindow)
 
@@ -24,7 +25,7 @@ func Run() {
 	ctxApp, cancel = context.WithCancel(context.TODO())
 
 	closeHttpServer := startHttpServer()
-
+	go runGUI()
 	// цикл оконных сообщений
 	for {
 		var msg win.MSG
@@ -34,19 +35,17 @@ func Run() {
 		win.TranslateMessage(&msg)
 		win.DispatchMessage(&msg)
 	}
-
 	cancel()
 	closeHttpServer()
-
 	log.ErrIfFail(data.DB.Close, "defer", "close products db")
-
+	cfg.Save()
 }
 
 func sysTray(onClose func()) {
 	systray.Run(func() {
 		systray.SetIcon(must.ReadFile(filepath.Join(filepath.Dir(os.Args[0]), "assets", "img", "app.ico")))
-		systray.SetTitle("Производство ЭХЯ CO")
-		systray.SetTooltip("Производство ЭХЯ CO")
+		systray.SetTitle("МИЛ-82")
+		systray.SetTooltip("МИЛ-82")
 		mRunGUIApp := systray.AddMenuItem("Показать", "Показать окно приложения")
 		mQuitOrig := systray.AddMenuItem("Закрыть", "Закрыть приложение")
 
@@ -54,9 +53,7 @@ func sysTray(onClose func()) {
 			for {
 				select {
 				case <-mRunGUIApp.ClickedCh:
-					if err := runGUI(); err != nil {
-						panic(merry.Append(err, "не удалось запустить elcoui.exe"))
-					}
+					go runGUI()
 				case <-mQuitOrig.ClickedCh:
 					systray.Quit()
 					onClose()
@@ -67,13 +64,10 @@ func sysTray(onClose func()) {
 	})
 }
 
-func runGUI() error {
-	fileName := filepath.Join(filepath.Dir(os.Args[0]), "mil82gui.exe")
-	err := exec.Command(fileName).Start()
-	if err != nil {
-		return merry.Append(err, fileName)
+func runGUI() {
+	if err := exec.Command(filepath.Join(filepath.Dir(os.Args[0]), "mil82gui.exe")).Start(); err != nil {
+		panic(err)
 	}
-	return nil
 }
 
 func initLog() {

@@ -2,9 +2,9 @@ package data
 
 import (
 	"database/sql"
+	"github.com/fpawel/gohelp/must"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/powerman/must"
 	"github.com/powerman/structlog"
 	"os"
 	"path/filepath"

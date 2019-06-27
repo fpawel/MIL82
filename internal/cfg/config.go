@@ -1,8 +1,10 @@
 package cfg
 
 import (
-	"github.com/pelletier/go-toml"
-	"github.com/powerman/must"
+	"encoding/json"
+	"github.com/fpawel/gohelp/must"
+	"github.com/fpawel/mil82/internal/data"
+	"github.com/powerman/structlog"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -10,7 +12,32 @@ import (
 )
 
 type Config struct {
-	PlacesUncheck map[int]struct{} `toml:"places_uncheck" comment:"номера мест, с которых снята галочка в таблице"`
+	UserSettings
+	PlacesUncheck []int
+	Vars          []Var
+}
+
+type Var struct {
+	Code int    `db:"var"`
+	Name string `db:"name"`
+}
+
+type UserSettings struct {
+	ComportProducts,
+	ComportTemperature,
+	ComportGas string
+	TemperatureMinus,
+	TemperaturePlus float32
+	BlowGasMinutes,
+	BlowAirMinutes,
+	HoldTemperatureHours int
+}
+
+func Set(v Config) {
+	mu.Lock()
+	defer mu.Unlock()
+	must.UnmarshalJSON(must.MarshalJSON(&v), &config)
+	return
 }
 
 func Get() (result Config) {
@@ -20,30 +47,62 @@ func Get() (result Config) {
 	return
 }
 
+func (c Config) PlaceChecked(place int) bool {
+	for _, x := range c.PlacesUncheck {
+		if x == place {
+			return false
+		}
+	}
+	return true
+}
+
+func (c *Config) SetPlaceChecked(place int, checked bool) {
+	if checked {
+		b := c.PlacesUncheck[:0]
+		for _, x := range c.PlacesUncheck {
+			if x != place {
+				b = append(b, x)
+			}
+		}
+		c.PlacesUncheck = b
+	} else {
+		c.PlacesUncheck = append(c.PlacesUncheck, place)
+	}
+}
+
 func Save() {
 	mu.Lock()
 	defer mu.Unlock()
-	data, err := toml.Marshal(&config)
-	if err != nil {
+	must.WriteFile(fileName(), must.MarshalIndentJSON(&config, "", "    "), 0666)
+}
+
+func Open() {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if err := data.DB.Select(&config.Vars, `SELECT var, name FROM var ORDER BY var`); err != nil {
 		panic(err)
 	}
-	must.WriteFile(fileName(), data, 0666)
+
+	b, err := ioutil.ReadFile(fileName())
+	if err != nil {
+		log.PrintErr(err.Error(), "файл", fileName())
+	}
+	if err == nil {
+		err = json.Unmarshal(b, &config)
+		if err != nil {
+			log.PrintErr(err.Error(), "файл", fileName())
+		}
+	}
 }
 
 func fileName() string {
-	return filepath.Join(filepath.Dir(os.Args[0]), "config.toml")
-}
-
-func init() {
-	mu.Lock()
-	defer mu.Unlock()
-	data, err := ioutil.ReadFile(fileName())
-	if err == nil {
-		_ = toml.Unmarshal(data, &config)
-	}
+	return filepath.Join(filepath.Dir(os.Args[0]), "config.json")
 }
 
 var (
 	config Config
-	mu     sync.Mutex
+
+	mu  sync.Mutex
+	log = structlog.New()
 )
