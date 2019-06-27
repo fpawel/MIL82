@@ -14,6 +14,18 @@ type AppSettings struct {
 	Temperature [3]float32
 }
 
+func (_ *ConfigSvc) UserAppSetts(_ struct{}, r *cfg.UserAppSettings) error {
+	*r = cfg.Get().UserAppSettings
+	return nil
+}
+
+func (_ *ConfigSvc) SetUserAppSetts(x struct{ A cfg.UserAppSettings }, _ *struct{}) error {
+	c := cfg.Get()
+	c.UserAppSettings = x.A
+	cfg.Set(c)
+	return nil
+}
+
 func (_ *ConfigSvc) Vars(_ struct{}, vars *[]cfg.Var) error {
 	*vars = cfg.Get().Vars
 	return nil

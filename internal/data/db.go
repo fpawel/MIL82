@@ -23,10 +23,11 @@ func Open(createNew bool) {
 		dir = filepath.Dir(os.Args[0])
 	}
 	fileName := filepath.Join(dir, "mil82.sqlite")
-	if _, err := os.Stat(fileName); os.IsNotExist(err) || createNew {
+	_, err := os.Stat(fileName)
+	if os.IsNotExist(err) || createNew {
 		createNew = true
 	}
-	if createNew {
+	if createNew && os.IsExist(err) {
 		must.Remove(fileName)
 		log.Warn(fileName + " removed")
 	}

@@ -12,7 +12,7 @@ import (
 )
 
 type Config struct {
-	UserSettings
+	UserAppSettings
 	PlacesUncheck []int
 	Vars          []Var
 }
@@ -22,15 +22,15 @@ type Var struct {
 	Name string `db:"name"`
 }
 
-type UserSettings struct {
+type UserAppSettings struct {
 	ComportProducts,
 	ComportTemperature,
 	ComportGas string
 	TemperatureMinus,
-	TemperaturePlus float32
+	TemperaturePlus float64
 	BlowGasMinutes,
 	BlowAirMinutes,
-	HoldTemperatureHours int
+	HoldTemperatureMinutes int
 }
 
 func Set(v Config) {

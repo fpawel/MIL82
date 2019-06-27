@@ -28,6 +28,15 @@ type method struct {
 	procedure     bool
 }
 
+func (x method) hasStructureParam() bool {
+	for _, p := range x.params {
+		if p.isStructure {
+			return true
+		}
+	}
+	return false
+}
+
 type param struct {
 	name, typeName string
 	isArray        bool
@@ -43,7 +52,7 @@ func (x param) String() string {
 
 func (x param) setFieldInstruction() string {
 	if x.isStructure {
-		return fmt.Sprintf("req['%s'] := SO(TJson.ObjectToJsonString(%s)); %s.Free", x.name, x.name, x.name)
+		return fmt.Sprintf("TgoBsonSerializer.serialize(%s, s); req['%s'] := SO(s)", x.name, x.name)
 	}
 
 	return fmt.Sprintf("SuperObject_SetField(req, '%s', %s)",
@@ -54,7 +63,7 @@ func NewServicesSrc(unitName, dataUnitName string, types []r.Type, ta typesNames
 	src := &ServicesSrc{
 		unitName:      unitName,
 		interfaceUses: []string{dataUnitName, "superobject"},
-		implUses:      []string{"HttpRpcClient", "SuperObjectHelp"},
+		implUses:      []string{"HttpRpcClient", "SuperObjectHelp", "Grijjy.Bson.Serialization"},
 		DataTypes: &TypesSrc{
 			unitName:      dataUnitName,
 			interfaceUses: []string{"Grijjy.Bson", "Grijjy.Bson.Serialization"},
