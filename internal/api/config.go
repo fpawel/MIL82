@@ -4,14 +4,23 @@ import (
 	"github.com/fpawel/mil82/internal/cfg"
 )
 
-type ConfigSvc struct {
+type ConfigSvc struct{}
+
+func (_ *ConfigSvc) ProductTypeTemperatures(productType [1]string, r *TempPlusMinus) error {
+	for _, t := range cfg.Get().ProductTypes {
+		if t.Name() == productType[0] {
+			r.TempMinus = t.TempMinus
+			r.TempPlus = t.TempPlus
+		}
+	}
+	return nil
 }
 
-type AppSettings struct {
-	ComportProducts,
-	ComportTemperature,
-	ComportGas string
-	Temperature [3]float32
+func (_ *ConfigSvc) ProductTypesNames(_ struct{}, r *[]string) error {
+	for _, t := range cfg.Get().ProductTypes {
+		*r = append(*r, t.Name())
+	}
+	return nil
 }
 
 func (_ *ConfigSvc) UserAppSetts(_ struct{}, r *cfg.UserAppSettings) error {

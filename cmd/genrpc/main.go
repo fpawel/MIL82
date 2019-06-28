@@ -36,6 +36,14 @@ func main() {
 			"Panic",
 			r.TypeOf((*string)(nil)).Elem(),
 		},
+		{
+			"ReadVar",
+			r.TypeOf((*api.AddrVarValue)(nil)).Elem(),
+		},
+		{
+			"Error",
+			r.TypeOf((*string)(nil)).Elem(),
+		},
 	})
 
 	file := createFile("services.pas")

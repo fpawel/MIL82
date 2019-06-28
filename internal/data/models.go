@@ -5,13 +5,17 @@ import (
 )
 
 type Party struct {
-	PartyID     int64     `db:"party_id"`
-	CreatedAt   time.Time `db:"created_at"`
-	ProductType string    `db:"product_type"`
-	C1          float32   `db:"c1"`
-	C2          float32   `db:"c2"`
-	C3          float32   `db:"c3"`
-	C4          float32   `db:"c4"`
+	PartySettings
+	PartyID   int64     `db:"party_id"`
+	CreatedAt time.Time `db:"created_at"`
+}
+
+type PartySettings struct {
+	ProductType string  `db:"product_type"`
+	C1          float64 `db:"c1"`
+	C2          float64 `db:"c2"`
+	C3          float64 `db:"c3"`
+	C4          float64 `db:"c4"`
 }
 
 type Product struct {
@@ -28,11 +32,11 @@ type ProductValue struct {
 	Var       int     `db:"var"`
 	Gas       string  `db:"gas"`
 	Temp      string  `db:"temp"`
-	Value     float32 `db:"value"`
+	Value     float64 `db:"value"`
 }
 
 type ProductCoefficient struct {
 	ProductID   int64   `db:"product_id"`
-	Coefficient int32   `db:"coefficient"`
-	Value       float32 `db:"value"`
+	Coefficient int     `db:"coefficient"`
+	Value       float64 `db:"value"`
 }

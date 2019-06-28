@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS product_coefficient
 );
 
 CREATE VIEW IF NOT EXISTS last_party AS
-SELECT party_id
+SELECT *
 FROM party
 ORDER BY created_at DESC
 LIMIT 1;

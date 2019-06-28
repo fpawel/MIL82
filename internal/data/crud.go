@@ -5,10 +5,10 @@ import (
 )
 
 func LastParty() (party Party) {
-	err := DB.Get(&party, `SELECT party_id FROM last_party`)
+	err := DB.Get(&party, `SELECT * FROM last_party`)
 	if err == sql.ErrNoRows {
 		DB.MustExec(`INSERT INTO party DEFAULT VALUES`)
-		err = DB.Get(&party, `SELECT party_id FROM last_party`)
+		err = DB.Get(&party, `SELECT * FROM last_party`)
 	}
 	if err != nil {
 		panic(err)

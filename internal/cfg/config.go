@@ -15,6 +15,7 @@ type Config struct {
 	UserAppSettings
 	PlacesUncheck []int
 	Vars          []Var
+	ProductTypes  []ProductType
 }
 
 type Var struct {
@@ -101,8 +102,40 @@ func fileName() string {
 }
 
 var (
-	config Config
-
-	mu  sync.Mutex
-	log = structlog.New()
+	mu     sync.Mutex
+	log    = structlog.New()
+	config = Config{
+		UserAppSettings: UserAppSettings{
+			BlowGasMinutes:         5,
+			BlowAirMinutes:         1,
+			HoldTemperatureMinutes: 120,
+			TemperatureMinus:       -60,
+			TemperaturePlus:        80,
+		},
+		ProductTypes: []ProductType{
+			{N1: 0, N2: 0, Component: CO2, Scale: Sc4, K4: 5, K14: 0.1, K45: 60, K35: 5, K50: 0, TempMinus: -40, TempPlus: 80},
+			{N1: 0, N2: 1, Component: CO2, Scale: Sc10, K4: 5, K14: 0.1, K45: 60, K35: 5, K50: 0, TempMinus: -40, TempPlus: 80},
+			{N1: 0, N2: 2, Component: CO2, Scale: Sc20, K4: 5, K14: 0.1, K45: 60, K35: 5, K50: 0, TempMinus: -40, TempPlus: 80},
+			{N1: 1, N2: 0, Component: CH4, Scale: Sc100, K4: 7.5, K14: 0.5, K45: 60, K35: 5, K50: 0, TempMinus: -40, TempPlus: 80},
+			{N1: 1, N2: 1, Component: CH4, Scale: Sc100, K4: 7.5, K14: 0.5, K45: 60, K35: 5, K50: 0, TempMinus: -60, TempPlus: 60},
+			{N1: 2, N2: 0, Component: C3H8, Scale: Sc50, K4: 12.5, K14: 0.5, K45: 30, K35: 5, K50: 0, TempMinus: -40, TempPlus: 60},
+			{N1: 2, N2: 1, Component: C3H8, Scale: Sc50, K4: 12.5, K14: 0.5, K45: 30, K35: 5, K50: 0, TempMinus: -60, TempPlus: 60},
+			{N1: 3, N2: 0, Component: C3H8, Scale: Sc100, K4: 12.5, K14: 0.5, K45: 30, K35: 5, K50: 0, TempMinus: -40, TempPlus: 60},
+			{N1: 3, N2: 1, Component: C3H8, Scale: Sc100, K4: 12.5, K14: 0.5, K45: 30, K35: 5, K50: 0, TempMinus: -60, TempPlus: 60},
+			{N1: 4, N2: 0, Component: CH4, Scale: Sc100, K4: 7.5, K14: 0.5, K45: 60, K35: 5, K50: 0, TempMinus: -60, TempPlus: 80},
+			{N1: 5, N2: 0, Component: C6H14, Scale: Sc50, K4: 1, K14: 30, K45: 30, K35: 5, K50: 0, TempMinus: 15, TempPlus: 80, ScaleBeg: 5},
+			{N1: 10, N2: 0, Component: CO2, Scale: Sc4, K4: 1, K14: 30, K45: 30, K35: 1, K50: 1, TempMinus: -40, TempPlus: 80},
+			{N1: 10, N2: 1, Component: CO2, Scale: Sc10, K4: 1, K14: 30, K45: 30, K35: 1, K50: 1, TempMinus: -40, TempPlus: 80},
+			{N1: 10, N2: 2, Component: CO2, Scale: Sc20, K4: 1, K14: 30, K45: 30, K35: 1, K50: 1, TempMinus: -40, TempPlus: 80},
+			{N1: 10, N2: 3, Component: CO2, Scale: Sc4, K4: 1, K14: 30, K45: 30, K35: 1, K50: 1, TempMinus: -60, TempPlus: 80},
+			{N1: 10, N2: 4, Component: CO2, Scale: Sc10, K4: 1, K14: 30, K45: 30, K35: 1, K50: 1, TempMinus: -60, TempPlus: 80},
+			{N1: 10, N2: 5, Component: CO2, Scale: Sc20, K4: 1, K14: 30, K45: 30, K35: 1, K50: 1, TempMinus: -60, TempPlus: 80},
+			{N1: 11, N2: 0, Component: CH4, Scale: Sc100, K4: 1, K14: 30, K45: 30, K35: 1, K50: 1, TempMinus: -40, TempPlus: 80},
+			{N1: 11, N2: 1, Component: CH4, Scale: Sc100, K4: 1, K14: 30, K45: 30, K35: 1, K50: 1, TempMinus: -60, TempPlus: 80},
+			{N1: 13, N2: 0, Component: C3H8, Scale: Sc100, K4: 1, K14: 30, K45: 30, K35: 1, K50: 1, TempMinus: -40, TempPlus: 80},
+			{N1: 13, N2: 1, Component: C3H8, Scale: Sc100, K4: 1, K14: 30, K45: 30, K35: 1, K50: 1, TempMinus: -60, TempPlus: 80},
+			{N1: 14, N2: 0, Component: CH4, Scale: Sc100, K4: 1, K14: 30, K45: 30, K35: 1, K50: 1, TempMinus: -60, TempPlus: 80},
+			{N1: 16, N2: 0, Component: C3H8, Scale: Sc100, K4: 1, K14: 30, K45: 30, K35: 1, K50: 1, TempMinus: -60, TempPlus: 80},
+		},
+	}
 )
