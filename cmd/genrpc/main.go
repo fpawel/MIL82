@@ -4,6 +4,7 @@ import (
 	"github.com/fpawel/gohelp/must"
 	"github.com/fpawel/gohelp/winapp"
 	"github.com/fpawel/mil82/internal/api"
+	"github.com/fpawel/mil82/internal/api/types"
 	"github.com/fpawel/mil82/internal/delphirpc"
 	"os"
 	"path/filepath"
@@ -11,16 +12,6 @@ import (
 )
 
 func main() {
-	types := []r.Type{
-		r.TypeOf((*api.LastPartySvc)(nil)),
-		r.TypeOf((*api.ConfigSvc)(nil)),
-	}
-	m := map[string]string{
-		"ProductInfo": "Product",
-		"WorkInfo":    "JournalWork",
-		"EntryInfo":   "JournalEntry",
-	}
-
 	dir := filepath.Join(os.Getenv("DELPHIPATH"),
 		"src", "github.com", "fpawel", "mil82gui", "api")
 	winapp.EnsuredDirectory(dir)
@@ -29,7 +20,17 @@ func main() {
 		return must.Create(filepath.Join(dir, fileName))
 	}
 
-	servicesSrc := delphirpc.NewServicesSrc("services", "server_data_types", types, m)
+	servicesSrc := delphirpc.NewServicesSrc("services", "server_data_types", []r.Type{
+		r.TypeOf((*api.LastPartySvc)(nil)),
+		r.TypeOf((*api.ConfigSvc)(nil)),
+		r.TypeOf((*api.RunnerSvc)(nil)),
+		r.TypeOf((*api.PeerSvc)(nil)),
+		r.TypeOf((*api.ChartsSvc)(nil)),
+	}, map[string]string{
+		"ProductInfo": "Product",
+		"WorkInfo":    "JournalWork",
+		"EntryInfo":   "JournalEntry",
+	})
 
 	notifySvcSrc := delphirpc.NewNotifyServicesSrc("notify_services", servicesSrc.DataTypes, []delphirpc.NotifyServiceType{
 		{
@@ -38,11 +39,27 @@ func main() {
 		},
 		{
 			"ReadVar",
-			r.TypeOf((*api.AddrVarValue)(nil)).Elem(),
+			r.TypeOf((*types.AddrVarValue)(nil)).Elem(),
 		},
 		{
-			"Error",
+			"AddrError",
+			r.TypeOf((*types.AddrError)(nil)).Elem(),
+		},
+		{
+			"WorkStarted",
 			r.TypeOf((*string)(nil)).Elem(),
+		},
+		{
+			"WorkComplete",
+			r.TypeOf((*types.WorkResultInfo)(nil)).Elem(),
+		},
+		{
+			"Warning",
+			r.TypeOf((*string)(nil)).Elem(),
+		},
+		{
+			"Delay",
+			r.TypeOf((*types.DelayInfo)(nil)).Elem(),
 		},
 	})
 

@@ -1,12 +1,13 @@
 package api
 
 import (
+	"github.com/fpawel/mil82/internal/api/types"
 	"github.com/fpawel/mil82/internal/cfg"
 )
 
 type ConfigSvc struct{}
 
-func (_ *ConfigSvc) ProductTypeTemperatures(productType [1]string, r *TempPlusMinus) error {
+func (_ *ConfigSvc) ProductTypeTemperatures(productType [1]string, r *types.TempPlusMinus) error {
 	for _, t := range cfg.Get().ProductTypes {
 		if t.Name() == productType[0] {
 			r.TempMinus = t.TempMinus

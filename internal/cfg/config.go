@@ -2,6 +2,7 @@ package cfg
 
 import (
 	"encoding/json"
+	"github.com/fpawel/comm/modbus"
 	"github.com/fpawel/gohelp/must"
 	"github.com/fpawel/mil82/internal/data"
 	"github.com/powerman/structlog"
@@ -19,8 +20,8 @@ type Config struct {
 }
 
 type Var struct {
-	Code int    `db:"var"`
-	Name string `db:"name"`
+	Code modbus.Var `db:"var"`
+	Name string     `db:"name"`
 }
 
 type UserAppSettings struct {

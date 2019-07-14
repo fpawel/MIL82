@@ -3,11 +3,13 @@ package app
 import (
 	"github.com/fpawel/gohelp/must"
 	"github.com/fpawel/mil82/internal/api"
+	"github.com/fpawel/mil82/internal/charts"
 	"github.com/powerman/rpc-codec/jsonrpc2"
 	"golang.org/x/sys/windows/registry"
 	"net"
 	"net/http"
 	"net/rpc"
+	"strconv"
 )
 
 func startHttpServer() func() {
@@ -15,6 +17,9 @@ func startHttpServer() func() {
 	for _, svcObj := range []interface{}{
 		new(api.LastPartySvc),
 		new(api.ConfigSvc),
+		api.NewPeerSvc(peerNotifier{}),
+		api.NewRunnerSvc(runner{}),
+		new(api.ChartsSvc),
 	} {
 		must.AbortIf(rpc.Register(svcObj))
 	}
@@ -22,11 +27,19 @@ func startHttpServer() func() {
 	// Server provide a HTTP transport on /rpc endpoint.
 	http.Handle("/rpc", jsonrpc2.HTTPHandler(nil))
 
-	srv := new(http.Server)
-
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		must.Write(w, []byte("hello world"))
 	})
+
+	http.HandleFunc("/chart", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Header().Set("Accept", "application/octet-stream")
+		bucketID, _ := strconv.ParseInt(r.URL.Query().Get("bucket"), 10, 64)
+		charts.WritePointsResponse(w, bucketID)
+	})
+
+	srv := new(http.Server)
 	lnHTTP, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		panic(err)

@@ -39,9 +39,9 @@ func NewNotifyServicesSrc(unitName string, d *TypesSrc, services []NotifyService
 		DataTypes:     d,
 		types:         make(map[string]string),
 		goImports: map[string]struct{}{
-			"fmt":                              {},
-			"github.com/fpawel/mil82/internal": {},
-			"github.com/powerman/structlog":    {},
+			"fmt":                                   {},
+			"github.com/fpawel/mil82/internal/peer": {},
+			"github.com/powerman/structlog":         {},
 		},
 	}
 	for _, s := range services {

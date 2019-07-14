@@ -2,44 +2,29 @@ package data
 
 import (
 	"database/sql"
-	"github.com/fpawel/gohelp/must"
-	"github.com/jmoiron/sqlx"
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/powerman/structlog"
-	"os"
+	"github.com/fpawel/gohelp"
+	"github.com/fpawel/mil82/internal"
 	"path/filepath"
 )
 
 //go:generate go run github.com/fpawel/gohelp/cmd/sqlstr/...
 
 var (
-	DB  *sqlx.DB
-	log = structlog.New()
+	DB = gohelp.OpenSqliteDBx(filepath.Join(internal.DataDir(), "mil82.sqlite"))
 )
 
-func Open(createNew bool) {
-	dir := os.Getenv("MIL82_DATA_DIR")
-	if len(dir) == 0 {
-		dir = filepath.Dir(os.Args[0])
+func init() {
+	DB.MustExec(SQLCreate)
+}
+
+func LastParty() (party Party) {
+	err := DB.Get(&party, `SELECT * FROM last_party`)
+	if err == sql.ErrNoRows {
+		DB.MustExec(`INSERT INTO party DEFAULT VALUES`)
+		err = DB.Get(&party, `SELECT * FROM last_party`)
 	}
-	fileName := filepath.Join(dir, "mil82.sqlite")
-	_, err := os.Stat(fileName)
-	if os.IsNotExist(err) || createNew {
-		createNew = true
-	}
-	if createNew && os.IsExist(err) {
-		must.Remove(fileName)
-		log.Warn(fileName + " removed")
-	}
-	dbConn, err := sql.Open("sqlite3", fileName)
 	if err != nil {
 		panic(err)
 	}
-	dbConn.SetMaxIdleConns(1)
-	dbConn.SetMaxOpenConns(1)
-	dbConn.SetConnMaxLifetime(0)
-
-	log.Info("open: " + fileName)
-	DB = sqlx.NewDb(dbConn, "sqlite3")
-	DB.MustExec(SQLCreate)
+	return
 }
