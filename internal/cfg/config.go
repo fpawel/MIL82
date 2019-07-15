@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 type Config struct {
@@ -33,6 +34,11 @@ type UserAppSettings struct {
 	BlowGasMinutes,
 	BlowAirMinutes,
 	HoldTemperatureMinutes int
+	InterrogateProductVarIntervalMillis int
+}
+
+func (x UserAppSettings) InterrogateProductVarInterval() time.Duration {
+	return time.Duration(x.InterrogateProductVarIntervalMillis) * time.Millisecond
 }
 
 func Set(v Config) {

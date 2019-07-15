@@ -33,7 +33,6 @@ func runWork(parentCtx context.Context, createNewChart bool, workName string, wo
 
 	if createNewChart {
 		charts.CreateNewBucket(workName)
-		defer charts.SaveLastBucket()
 	}
 
 	go func() {
@@ -41,6 +40,9 @@ func runWork(parentCtx context.Context, createNewChart bool, workName string, wo
 		r := types.WorkResultInfo{Work: workName}
 
 		defer func() {
+			if createNewChart {
+				charts.SaveLastBucket()
+			}
 			notify.WorkComplete(log, r)
 			log.Printf("%+v", r.Result)
 			log.ErrIfFail(readerProducts.Close)

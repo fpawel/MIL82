@@ -90,5 +90,8 @@ VALUES (?,?,?)`, data.LastParty().PartyID, serial, addr)
 
 func (_ *LastPartySvc) Products(_ struct{}, r *[]party.Product) error {
 	*r = party.Products()
+	if *r == nil {
+		*r = []party.Product{}
+	}
 	return nil
 }

@@ -1,8 +1,8 @@
 package app
 
 import (
-	"context"
 	"github.com/ansel1/merry"
+	"github.com/fpawel/comm"
 	"github.com/fpawel/mil82/internal/cfg"
 	"github.com/fpawel/mil82/internal/party"
 	"time"
@@ -36,14 +36,14 @@ func (_ runner) RunReadVars() {
 		for {
 			products := party.CheckedProducts()
 			if len(products) == 0 {
-				return merry.New("для опроса необходимо установить галочку для как минимум одиного прибора")
+				return merry.New("для опроса необходимо установить галочку для как минимум одного прибора")
 			}
 		loopProducts:
 			for _, p := range products {
 				for _, v := range vars {
 					_, err := readProductVar(p.Addr, v.Code)
 					if err != nil {
-						if merry.Is(err, context.DeadlineExceeded) {
+						if merry.Is(err, comm.ErrProtocol) {
 							continue loopProducts
 						}
 						return err

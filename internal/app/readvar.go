@@ -6,9 +6,8 @@ import (
 	"github.com/fpawel/gohelp"
 	"github.com/fpawel/mil82/internal/api/notify"
 	"github.com/fpawel/mil82/internal/api/types"
+	"github.com/fpawel/mil82/internal/cfg"
 	"github.com/fpawel/mil82/internal/charts"
-	"math"
-	"math/rand"
 	"time"
 )
 
@@ -18,27 +17,13 @@ func readProductVar(addr modbus.Addr, VarCode modbus.Var) (float64, error) {
 
 func readProductVarWithContext(addr modbus.Addr, VarCode modbus.Var, ctx context.Context) (float64, error) {
 
+	defer pauseWithContext(ctx.Done(), cfg.Get().InterrogateProductVarInterval())
+
 	log := gohelp.LogWithKeys(log, "адрес", addr, "var", VarCode)
 
-	if addr == 1 || addr == 2 || addr == 3 {
-
-		timer := time.NewTimer(time.Millisecond * 200)
-	pauseLoop:
-		for {
-			select {
-			case <-timer.C:
-				break pauseLoop
-			case <-ctx.Done():
-				timer.Stop()
-				return 0, ctx.Err()
-			}
-		}
-
-		value := math.Round(rand.Float64()*100) / 100
-		notify.ReadVar(log, types.AddrVarValue{Addr: addr, VarCode: VarCode, Value: value})
-		charts.AddPointToLastBucket(addr, VarCode, value)
-		return value, nil
-	}
+	//if addr == 1 || addr == 2 || addr == 3 {
+	//	return fakeReadAddrVarValue(ctx, addr, VarCode)
+	//}
 
 	value, err := modbus.Read3BCD(log, responseReaderProducts(ctx), addr, VarCode)
 	if err == nil {
@@ -48,5 +33,26 @@ func readProductVarWithContext(addr modbus.Addr, VarCode modbus.Var, ctx context
 	}
 
 	notify.AddrError(log, types.AddrError{Addr: addr, Message: err.Error()})
+
 	return value, err
+}
+
+//func fakeReadAddrVarValue(ctx context.Context, addr modbus.Addr, Var modbus.Var) (float64, error){
+//	value := math.Round(rand.Float64()*100) / 100
+//	notify.ReadVar(log, types.AddrVarValue{Addr: addr, VarCode: Var, Value: value})
+//	charts.AddPointToLastBucket(addr, Var, value)
+//	return value, nil
+//}
+
+func pauseWithContext(chDone <-chan struct{}, d time.Duration) {
+	timer := time.NewTimer(d)
+	for {
+		select {
+		case <-timer.C:
+			return
+		case <-chDone:
+			timer.Stop()
+			return
+		}
+	}
 }

@@ -38,7 +38,9 @@ CREATE VIEW IF NOT EXISTS bucket_time AS
 SELECT *,
        cast(strftime('%Y', created_at) AS INT) AS year,
        cast(strftime('%m', created_at) AS INT) AS month,
-       cast(strftime('%d', created_at) AS INT) AS day
+       cast(strftime('%d', created_at) AS INT) AS day,
+       cast(strftime('%H', created_at) AS INTEGER) AS hour,
+       cast(strftime('%M', created_at) AS INTEGER) AS minute
 FROM bucket;
 
 CREATE VIEW IF NOT EXISTS series_time1 AS

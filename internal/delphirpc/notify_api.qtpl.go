@@ -80,7 +80,11 @@ const (
 		//line notify_api.qtpl:20
 		qw422016.N().S(`) {
     if log != nil {
-        log.Info(peer.WindowClassName + ": `)
+        msg`)
+		//line notify_api.qtpl:22
+		qw422016.E().S(m.serviceName)
+		//line notify_api.qtpl:22
+		qw422016.N().S(`.Log(log)(peer.WindowClassName + ": `)
 		//line notify_api.qtpl:22
 		qw422016.E().S(m.serviceName)
 		//line notify_api.qtpl:22
@@ -115,7 +119,11 @@ func `)
 			//line notify_api.qtpl:27
 			qw422016.N().S(`f(log *structlog.Logger, format string, a ...interface{}) {
     if log != nil {
-        log.Info(peer.WindowClassName + ": `)
+        msg`)
+			//line notify_api.qtpl:29
+			qw422016.E().S(m.serviceName)
+			//line notify_api.qtpl:29
+			qw422016.N().S(`.Log(log)(peer.WindowClassName + ": `)
 			//line notify_api.qtpl:29
 			qw422016.E().S(m.serviceName)
 			//line notify_api.qtpl:29
