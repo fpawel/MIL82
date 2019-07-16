@@ -1,0 +1,61 @@
+{% func viewReportTables(reportTables []reportTable) %}
+    {% for _,t := range reportTables %}
+        {%= t.View() %}
+    {% endfor %}
+{% endfunc %}
+
+{% func (nd reportNode) View(titlePrefix string) %}
+    {%= viewReportTables(nd.Tables(titlePrefix)) %}
+{% endfunc %}
+
+{% func ViewParty(partyID int64) %}
+    {%= beginHtml() %}
+    {% for _,nd := range reportParty(partyID) %}
+        {%= nd.View("") %}
+    {% endfor %}
+    {%= endHtml() %}
+{% endfunc %}
+
+{% func (x reportTable) View() %}
+    <h3>{%s x.Title %}</h3>
+    <table class="tab2">
+        <thead>
+            <tr>
+                <th>Адрес</th>
+                <th>Сер.№</th>
+                {% for _,gas := range x.Gases %}
+                    <th>ПГС{%d int(gas)  %}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for _,r := range x.Rows %}
+             <tr>
+                <th style="text-align:left;" >{%d int(r.Addr) %} </th>
+                <td style="text-align:left;" >{%d r.Serial %} </td>
+                {% for _,pV := range r.Values %}
+                    <td style="text-align:left;">
+                        {% if pV!=nil %}
+                            {%f *pV %}
+                        {% endif %}
+                    </td>
+                {% endfor %}
+             </tr>
+             {% endfor %}
+        </tbody>
+    </table>
+{% endfunc %}
+
+{% func beginHtml() %}
+    <html>
+    	<head>
+            <title>Партия</title>
+            <link rel="stylesheet" type="text/css" href="assets/data.css">
+        </head>
+        <body>
+{% endfunc %}
+
+{% func endHtml() %}
+    </body>
+    </html>
+{% endfunc %}

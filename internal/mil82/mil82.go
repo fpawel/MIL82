@@ -36,3 +36,7 @@ const (
 	TempPlus  Temp = "temp_plus"
 	Temp90    Temp = "temp_90"
 )
+
+var Vars = []modbus.Var{
+	VarConc, VarTemp, Var16, VarCurr, Var8, Var10, VarWork, VarRef,
+}
