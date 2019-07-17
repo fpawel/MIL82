@@ -14,7 +14,7 @@ import (
 	"path/filepath"
 )
 
-func Run() {
+func Run(runPeer bool) {
 	initLog()
 	cfg.Open()
 	peer.Init("")
@@ -24,7 +24,11 @@ func Run() {
 	ctxApp, cancel = context.WithCancel(context.TODO())
 
 	closeHttpServer := startHttpServer()
-	go peer.RunGUI()
+
+	if runPeer {
+		go peer.RunGUI()
+	}
+
 	// цикл оконных сообщений
 	for {
 		var msg win.MSG

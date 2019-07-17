@@ -1,24 +1,45 @@
-{% func viewReportTables(reportTables []reportTable) %}
-    {% for _,t := range reportTables %}
-        {%= t.View() %}
-    {% endfor %}
-{% endfunc %}
 
-{% func (nd reportNode) View(titlePrefix string) %}
-    {%= viewReportTables(nd.Tables(titlePrefix)) %}
+{% func (nd reportNode) View() %}
+    {% if nd.Table != nil %}
+        {%= nd.Table.View() %}
+    {% else %}
+
+        {% if nd.Tree.Level == 0 %}
+            <h3 class="level0-caption"  >
+                {%s nd.Tree.Title %}
+            </h3>
+        {% else %}
+            <h4 class="level1-caption"  >
+                {%s nd.Tree.Title %}
+            </h4>
+        {% endif %}
+
+        {% for _,nd2 := range nd.Tree.Nodes %}
+            {%= nd2.View() %}
+        {% endfor %}
+
+    {% endif %}
 {% endfunc %}
 
 {% func ViewParty(partyID int64) %}
-    {%= beginHtml() %}
-    {% for _,nd := range reportParty(partyID) %}
-        {%= nd.View("") %}
-    {% endfor %}
-    {%= endHtml() %}
+    {% code nds := reportParty(partyID) %}
+
+    <html>
+    <head>
+        <title>МИЛ-82. Партия {%d int(partyID) %}. </title>
+        <link rel="stylesheet" type="text/css" href="assets/data.css">
+    </head>
+    <body>
+        {% for _,nd := range nds %}
+            {%= nd.View() %}
+        {% endfor %}
+    </body>
+    </html>
 {% endfunc %}
 
 {% func (x reportTable) View() %}
-    <h3>{%s x.Title %}</h3>
     <table class="tab2">
+        <caption>{%s varName[x.Var] %}</caption>
         <thead>
             <tr>
                 <th>Адрес</th>
@@ -31,10 +52,10 @@
         <tbody>
             {% for _,r := range x.Rows %}
              <tr>
-                <th style="text-align:left;" >{%d int(r.Addr) %} </th>
-                <td style="text-align:left;" >{%d r.Serial %} </td>
+                <th>{%d int(r.Addr) %} </th>
+                <td>{%d r.Serial %} </td>
                 {% for _,pV := range r.Values %}
-                    <td style="text-align:left;">
+                    <td>
                         {% if pV!=nil %}
                             {%f *pV %}
                         {% endif %}
@@ -44,18 +65,4 @@
              {% endfor %}
         </tbody>
     </table>
-{% endfunc %}
-
-{% func beginHtml() %}
-    <html>
-    	<head>
-            <title>Партия</title>
-            <link rel="stylesheet" type="text/css" href="assets/data.css">
-        </head>
-        <body>
-{% endfunc %}
-
-{% func endHtml() %}
-    </body>
-    </html>
 {% endfunc %}

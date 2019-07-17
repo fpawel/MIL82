@@ -26,6 +26,7 @@ func main() {
 		r.TypeOf((*api.RunnerSvc)(nil)),
 		r.TypeOf((*api.PeerSvc)(nil)),
 		r.TypeOf((*api.ChartsSvc)(nil)),
+		r.TypeOf((*api.PartiesSvc)(nil)),
 	}, map[string]string{
 		"ProductInfo": "Product",
 		"WorkInfo":    "JournalWork",

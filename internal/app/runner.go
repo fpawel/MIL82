@@ -22,6 +22,11 @@ func (_ runner) SkipDelay() {
 
 func (_ runner) RunMainWork() {
 	runWork(ctxApp, true, "настройка МИЛ-82", func() error {
+
+		if err := switchGas(1); err != nil {
+			return err
+		}
+
 		if err := delay("продувка ПГС1", 2*time.Minute); err != nil {
 			return err
 		}

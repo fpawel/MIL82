@@ -5,6 +5,11 @@ import (
 	"github.com/fpawel/comm/modbus"
 )
 
+type YearMonth struct {
+	Year  int `db:"year"`
+	Month int `db:"month"`
+}
+
 type TempPlusMinus struct {
 	TempPlus, TempMinus float64
 }

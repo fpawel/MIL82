@@ -6,25 +6,22 @@ import (
 	"github.com/fpawel/mil82/internal/data"
 )
 
-type ReportNode struct {
-	Title, Html string
-	Nodes       []ReportNode
-}
-
 type reportNode struct {
 	Table *reportTable `json:",omitempty"`
 	Tree  *reportNodes `json:",omitempty"`
 }
 
 type reportTable struct {
-	Title string
+	Var   modbus.Var
 	Gases []Gas       `json:",omitempty"`
 	Rows  []reportRow `json:",omitempty"`
 }
 
 type reportNodes struct {
-	Title string
-	Nodes []reportNode `json:",omitempty"`
+	Title  string
+	HtmlID string
+	Level  int
+	Nodes  []reportNode `json:",omitempty"`
 }
 
 type reportRow struct {
@@ -45,28 +42,21 @@ type reportDataNode struct {
 	nodes []reportDataNode
 }
 
-func ReportParty(partyID int64) (result []ReportNode) {
-	r := reportParty(partyID)
-	for _, nd := range r {
-		result = append(result, nd.ReportNode(""))
-	}
-	return
-}
-
 func reportParty(partyID int64) (result []reportNode) {
 	var products []data.Product
 	if err := data.DB.Select(&products, `SELECT * FROM product WHERE party_id = ?`, partyID); err != nil {
 		panic(err)
 	}
 	for _, dataNd := range reportDataNodes() {
-		nd := reportNode{Tree: &reportNodes{Title: dataNd.title}}
+		nd := reportNode{Tree: &reportNodes{Title: dataNd.title, HtmlID: string(dataNd.work)}}
 
 		if len(dataNd.nodes) == 0 {
-			nd = dataNd.makeVarsReportNode(products)
+			dataNd.makeVarsReportNode(products, &nd)
 		} else {
 
 			for _, dataNd := range dataNd.nodes {
-				nd2 := dataNd.makeVarsReportNode(products)
+				nd2 := reportNode{Tree: &reportNodes{Title: dataNd.title, Level: 1}}
+				dataNd.makeVarsReportNode(products, &nd2)
 				if len(nd2.Tree.Nodes) > 0 {
 					nd.Tree.Nodes = append(nd.Tree.Nodes, nd2)
 				}
@@ -79,8 +69,11 @@ func reportParty(partyID int64) (result []reportNode) {
 	return
 }
 
-func (dataNd reportDataNode) makeVarsReportNode(products []data.Product) (nd reportNode) {
-	nd.Tree = &reportNodes{Title: dataNd.title}
+func (dataNd reportDataNode) makeVarsReportNode(products []data.Product, nd *reportNode) {
+	nd.Table = nil
+	nd.Tree.Title = dataNd.title
+	nd.Tree.HtmlID = string(dataNd.work) + "_" + string(dataNd.temp)
+
 	hasValue := func(xs []*float64) bool {
 		for _, x := range xs {
 			if x != nil {
@@ -93,7 +86,8 @@ func (dataNd reportDataNode) makeVarsReportNode(products []data.Product) (nd rep
 	for _, Var := range Vars {
 		varNd := reportNode{
 			Table: &reportTable{
-				Title: varName[Var],
+				//Title: fmt.Sprintf( "[%02d] %s",Var, varName[Var]),
+				Var:   Var,
 				Gases: dataNd.workTempGases.gases,
 			},
 		}
@@ -164,46 +158,4 @@ func reportDataNodes() []reportDataNode {
 		lf("Техпрогон 1", WorkTex1, Temp20, gases1234),
 		lf("Техпрогон 2", WorkTex2, Temp20, gases1234),
 	}
-}
-
-func (nd reportNode) Tables(titlePrefix string) (result []reportTable) {
-	if nd.Table != nil {
-		result = []reportTable{*nd.Table}
-	} else if nd.Tree != nil {
-		for i := range nd.Tree.Nodes {
-			result = nd.Tree.Nodes[i].Tables(nd.Tree.Title + ". ")
-		}
-	}
-	for i := range result {
-		result[i].Title = titlePrefix + result[i].Title
-	}
-	return
-}
-
-func (nd reportNode) Title() string {
-	if nd.Tree != nil {
-		return nd.Tree.Title
-	} else if nd.Table != nil {
-		return nd.Table.Title
-	}
-	panic("not a node")
-}
-
-func (nd reportNode) ReportNode(titlePrefix string) (r ReportNode) {
-	r.Title = nd.Title()
-	r.Html = nd.View(titlePrefix)
-	r.Nodes = []ReportNode{}
-	if nd.Tree != nil {
-		for _, nd1 := range nd.Tree.Nodes {
-			r.Nodes = append(r.Nodes, nd1.ReportNode(nd.Title()+". "))
-		}
-	}
-	return
-}
-
-func reportNodesTables(nds []reportNode) (result []reportTable) {
-	for _, nd := range nds {
-		result = append(result, nd.Tables("")...)
-	}
-	return
 }

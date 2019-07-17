@@ -25,6 +25,7 @@ func startHttpServer() func() {
 		api.NewPeerSvc(peerNotifier{}),
 		api.NewRunnerSvc(runner{}),
 		new(api.ChartsSvc),
+		new(api.PartiesSvc),
 	} {
 		must.AbortIf(rpc.Register(svcObj))
 	}
@@ -48,7 +49,14 @@ func startHttpServer() func() {
 		w.WriteHeader(200)
 		w.Header().Set("Content-Type", "text/html")
 		w.Header().Set("Accept", "text/html")
-		partyID, _ := strconv.ParseInt(r.URL.Query().Get("party_id"), 10, 64)
+
+		s := r.URL.Query().Get("party_id")
+		var partyID int64
+		if s == "last" {
+			partyID = data.LastParty().PartyID
+		} else {
+			partyID, _ = strconv.ParseInt(s, 10, 64)
+		}
 		mil82.WriteViewParty(w, partyID)
 	})
 
@@ -62,7 +70,7 @@ func startHttpServer() func() {
 		panic(err)
 	}
 	addr := "http://" + lnHTTP.Addr().String()
-	log.Info(fmt.Sprintf("%s/report?party_id=%d", addr, data.LastParty().PartyID))
+	fmt.Printf("%s/report?party_id=last", addr)
 	key, _, err := registry.CreateKey(registry.CURRENT_USER, `mil82\http`, registry.ALL_ACCESS)
 	if err != nil {
 		panic(err)
