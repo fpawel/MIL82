@@ -82,7 +82,7 @@ func runWork(parentCtx context.Context, createNewChart bool, workName string, wo
 }
 
 type reader struct {
-	reader       *comport.Reader
+	reader       *comport.ReadWriter
 	config       comm.Config
 	portNameFunc func() string
 	ctx          context.Context
@@ -96,7 +96,7 @@ func (x reader) GetResponse(logger *structlog.Logger, request []byte, responsePa
 	}
 
 	return x.reader.GetResponse(comm.Request{
-		Logger:         logger,
+		Log:            logger,
 		Bytes:          request,
 		Config:         x.config,
 		ResponseParser: responseParser,

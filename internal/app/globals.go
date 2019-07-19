@@ -19,38 +19,45 @@ var (
 	ctxWork       = context.TODO()
 	wgWork        sync.WaitGroup
 
-	readerProducts = comport.NewReader(comport.Config{
-		Baud:        9600,
-		ReadTimeout: time.Millisecond,
+	portProducts = comport.NewReadWriter(func() comport.Config {
+		return comport.Config{
+			Baud:        9600,
+			ReadTimeout: time.Millisecond,
+			Name:        cfg.Get().ComportProducts,
+		}
+	}, func() comm.Config {
+		return comm.Config{
+			ReadByteTimeoutMillis: 50,
+			ReadTimeoutMillis:     1000,
+			MaxAttemptsRead:       3,
+		}
 	})
 
-	responseReaderGasBlock = reader{
-		reader: comport.NewReader(comport.Config{
+	portGas = comport.NewReadWriter(func() comport.Config {
+		return comport.Config{
 			Baud:        9600,
 			ReadTimeout: time.Millisecond,
-		}),
-		config: comm.Config{
+			Name:        cfg.Get().ComportGas,
+		}
+	}, func() comm.Config {
+		return comm.Config{
 			ReadByteTimeoutMillis: 50,
 			ReadTimeoutMillis:     1000,
 			MaxAttemptsRead:       3,
-		},
-		portNameFunc: func() string {
-			return cfg.Get().ComportGas
-		},
-	}
+		}
+	})
 
-	responseReaderTemperature = reader{
-		reader: comport.NewReader(comport.Config{
+	portTemp = comport.NewReadWriter(func() comport.Config {
+		return comport.Config{
 			Baud:        9600,
 			ReadTimeout: time.Millisecond,
-		}),
-		config: comm.Config{
+			Name:        cfg.Get().ComportTemperature,
+		}
+	}, func() comm.Config {
+		return comm.Config{
 			ReadByteTimeoutMillis: 50,
 			ReadTimeoutMillis:     1000,
 			MaxAttemptsRead:       3,
-		},
-		portNameFunc: func() string {
-			return cfg.Get().ComportTemperature
-		},
-	}
+		}
+	})
 )
