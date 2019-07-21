@@ -4,7 +4,7 @@ import (
 	"github.com/ansel1/merry"
 	"github.com/fpawel/comm"
 	"github.com/fpawel/mil82/internal/cfg"
-	"github.com/fpawel/mil82/internal/party"
+	"github.com/fpawel/mil82/internal/last_party"
 	"time"
 )
 
@@ -39,7 +39,7 @@ func (_ runner) RunReadVars() {
 	runWork(ctxApp, true, "опрос", func() error {
 		vars := cfg.Get().Vars
 		for {
-			products := party.CheckedProducts()
+			products := last_party.CheckedProducts()
 			if len(products) == 0 {
 				return merry.New("для опроса необходимо установить галочку для как минимум одного прибора")
 			}

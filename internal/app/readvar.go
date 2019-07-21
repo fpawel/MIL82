@@ -25,7 +25,7 @@ func readProductVarWithContext(addr modbus.Addr, VarCode modbus.Var, ctx context
 	//	return fakeReadAddrVarValue(ctx, addr, VarCode)
 	//}
 
-	value, err := modbus.Read3BCD(log, responseReaderProducts(ctx), addr, VarCode)
+	value, err := modbus.Read3BCD(log, ctx, portProducts, addr, VarCode)
 	if err == nil {
 		notify.ReadVar(log, types.AddrVarValue{Addr: addr, VarCode: VarCode, Value: value})
 		charts.AddPointToLastBucket(addr, VarCode, value)

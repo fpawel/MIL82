@@ -1,17 +1,17 @@
-package party
+package last_party
 
 import (
 	"github.com/fpawel/mil82/internal/cfg"
 	"github.com/fpawel/mil82/internal/data"
 )
 
-type Product struct {
+type LastPartyProduct struct {
 	data.Product
 	Place   int
 	Checked bool
 }
 
-func CheckedProducts() (products []Product) {
+func CheckedProducts() (products []LastPartyProduct) {
 	xs := Products()
 	for _, x := range xs {
 		if x.Checked {
@@ -21,9 +21,9 @@ func CheckedProducts() (products []Product) {
 	return
 }
 
-func Products() (products []Product) {
+func Products() (products []LastPartyProduct) {
 	if err := data.DB.Select(&products, `
-SELECT * FROM product 
+SELECT product_id, serial, addr FROM product 
 WHERE party_id = (SELECT party_id FROM last_party) 
 ORDER BY product_id`); err != nil {
 		panic(err)

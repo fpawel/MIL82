@@ -1,10 +1,8 @@
-package mil82
+package reporthtml
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/fpawel/gohelp"
-	"github.com/fpawel/mil82/internal/data"
 	"testing"
 )
 
@@ -23,8 +21,4 @@ func TestReportParty(t *testing.T) {
 func TestReportPartyHtml(t *testing.T) {
 	b, _ := json.MarshalIndent(reportParty(1), "", "  ")
 	fmt.Printf("%s", string(b))
-}
-
-func init() {
-	data.DB = gohelp.OpenSqliteDBx(`C:\GOPATH\src\github.com\fpawel\mil82\build\mil82.sqlite`)
 }

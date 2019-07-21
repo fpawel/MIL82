@@ -1,9 +1,10 @@
-package mil82
+package reporthtml
 
 import (
 	"database/sql"
 	"github.com/fpawel/comm/modbus"
 	"github.com/fpawel/mil82/internal/data"
+	"github.com/fpawel/mil82/internal/mil82"
 )
 
 type reportNode struct {
@@ -13,15 +14,14 @@ type reportNode struct {
 
 type reportTable struct {
 	Var   modbus.Var
-	Gases []Gas       `json:",omitempty"`
+	Gases []mil82.Gas `json:",omitempty"`
 	Rows  []reportRow `json:",omitempty"`
 }
 
 type reportNodes struct {
-	Title  string
-	HtmlID string
-	Level  int
-	Nodes  []reportNode `json:",omitempty"`
+	Title string
+	Level int
+	Nodes []reportNode `json:",omitempty"`
 }
 
 type reportRow struct {
@@ -31,9 +31,9 @@ type reportRow struct {
 }
 
 type workTempGases struct {
-	work  Work
-	temp  Temp
-	gases []Gas
+	work  mil82.Work
+	temp  mil82.Temp
+	gases []mil82.Gas
 }
 
 type reportDataNode struct {
@@ -44,11 +44,11 @@ type reportDataNode struct {
 
 func reportParty(partyID int64) (result []reportNode) {
 	var products []data.Product
-	if err := data.DB.Select(&products, `SELECT * FROM product WHERE party_id = ?`, partyID); err != nil {
+	if err := data.DB.Select(&products, `SELECT product_id, addr, serial FROM product WHERE party_id = ?`, partyID); err != nil {
 		panic(err)
 	}
-	for _, dataNd := range reportDataNodes() {
-		nd := reportNode{Tree: &reportNodes{Title: dataNd.title, HtmlID: string(dataNd.work)}}
+	for _, dataNd := range reportDataNodes {
+		nd := reportNode{Tree: &reportNodes{Title: dataNd.title}}
 
 		if len(dataNd.nodes) == 0 {
 			dataNd.makeVarsReportNode(products, &nd)
@@ -72,7 +72,6 @@ func reportParty(partyID int64) (result []reportNode) {
 func (dataNd reportDataNode) makeVarsReportNode(products []data.Product, nd *reportNode) {
 	nd.Table = nil
 	nd.Tree.Title = dataNd.title
-	nd.Tree.HtmlID = string(dataNd.work) + "_" + string(dataNd.temp)
 
 	hasValue := func(xs []*float64) bool {
 		for _, x := range xs {
@@ -83,7 +82,7 @@ func (dataNd reportDataNode) makeVarsReportNode(products []data.Product, nd *rep
 		return false
 	}
 
-	for _, Var := range Vars {
+	for _, Var := range mil82.Vars {
 		varNd := reportNode{
 			Table: &reportTable{
 				//Title: fmt.Sprintf( "[%02d] %s",Var, varName[Var]),
@@ -117,45 +116,28 @@ func (dataNd reportDataNode) makeVarsReportNode(products []data.Product, nd *rep
 	return
 }
 
-var varName = func() map[modbus.Var]string {
-	type Var struct {
-		Name string     `db:"name"`
-		Var  modbus.Var `db:"var"`
-	}
-	var vars []Var
-	if err := data.DB.Select(&vars, `SELECT * FROM var`); err != nil {
-		panic(err)
-	}
-
-	m := make(map[modbus.Var]string)
-	for _, v := range vars {
-		m[v.Var] = v.Name
-	}
-	return m
-}()
-
-func reportDataNodes() []reportDataNode {
-	lf := func(title string, work Work, temp Temp, gases []Gas) reportDataNode {
+var reportDataNodes = func() []reportDataNode {
+	lf := func(title string, work mil82.Work, temp mil82.Temp, gases []mil82.Gas) reportDataNode {
 		return reportDataNode{workTempGases{work, temp, gases}, title, nil}
 	}
 	nd := func(title string, nodes ...reportDataNode) reportDataNode {
 		return reportDataNode{title: title, nodes: nodes}
 	}
-	gases1234 := []Gas{1, 2, 3, 4}
-	gases134 := []Gas{1, 3, 4}
+	gases1234 := []mil82.Gas{1, 2, 3, 4}
+	gases134 := []mil82.Gas{1, 3, 4}
 
 	return []reportDataNode{
-		lf("Линеаризация", WorkLin, Temp20, gases1234),
+		lf("Линеаризация", mil82.WorkLin, mil82.Temp20, gases1234),
 		nd("Термокомпенсация",
-			lf("Нормальная температура", WorkTemp, Temp20, gases1234),
-			lf("Пониженная температура", WorkTemp, TempMinus, gases134),
-			lf("Повышенная температура", WorkTemp, TempPlus, gases134),
-			lf("+90⁰С", WorkTemp, Temp90, gases134)),
+			lf("Нормальная температура", mil82.WorkTemp, mil82.Temp20, gases1234),
+			lf("Пониженная температура", mil82.WorkTemp, mil82.TempMinus, gases134),
+			lf("Повышенная температура", mil82.WorkTemp, mil82.TempPlus, gases134),
+			lf("+90⁰С", mil82.WorkTemp, mil82.Temp90, gases134)),
 		nd("Проверка",
-			lf("Нормальная температура", WorkCheckup, Temp20, gases1234),
-			lf("Пониженная температура", WorkCheckup, TempMinus, gases134),
-			lf("Повышенная температура", WorkCheckup, TempPlus, gases134)),
-		lf("Техпрогон 1", WorkTex1, Temp20, gases1234),
-		lf("Техпрогон 2", WorkTex2, Temp20, gases1234),
+			lf("Нормальная температура", mil82.WorkCheckup, mil82.Temp20, gases1234),
+			lf("Пониженная температура", mil82.WorkCheckup, mil82.TempMinus, gases134),
+			lf("Повышенная температура", mil82.WorkCheckup, mil82.TempPlus, gases134)),
+		lf("Техпрогон 1", mil82.WorkTex1, mil82.Temp20, gases1234),
+		lf("Техпрогон 2", mil82.WorkTex2, mil82.Temp20, gases1234),
 	}
-}
+}()

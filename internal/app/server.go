@@ -6,7 +6,7 @@ import (
 	"github.com/fpawel/mil82/internal/api"
 	"github.com/fpawel/mil82/internal/charts"
 	"github.com/fpawel/mil82/internal/data"
-	"github.com/fpawel/mil82/internal/mil82"
+	"github.com/fpawel/mil82/internal/mil82/reporthtml"
 	"github.com/powerman/rpc-codec/jsonrpc2"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/html"
@@ -57,7 +57,7 @@ func startHttpServer() func() {
 		} else {
 			partyID, _ = strconv.ParseInt(s, 10, 64)
 		}
-		mil82.WriteViewParty(w, partyID)
+		reporthtml.WriteViewParty(w, partyID)
 	})
 
 	http.Handle("/assets/",
@@ -70,7 +70,7 @@ func startHttpServer() func() {
 		panic(err)
 	}
 	addr := "http://" + lnHTTP.Addr().String()
-	fmt.Printf("%s/report?party_id=last", addr)
+	fmt.Printf("%s/report?party_id=last\n", addr)
 	key, _, err := registry.CreateKey(registry.CURRENT_USER, `mil82\http`, registry.ALL_ACCESS)
 	if err != nil {
 		panic(err)

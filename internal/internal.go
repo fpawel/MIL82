@@ -5,14 +5,9 @@ import (
 	"path/filepath"
 )
 
-const (
-	EnvVarLogLevel = "MIL82_LOG_LEVEL"
-)
-
 func DataDir() string {
-	dir := os.Getenv("MIL82_DATA_DIR")
-	if len(dir) == 0 {
-		dir = filepath.Dir(os.Args[0])
+	if os.Getenv("MIL82_DEV_DB") == "true" {
+		return filepath.Join(os.Getenv("GOPATH"), "src", "github.com", "fpawel", "mil82", "build")
 	}
-	return dir
+	return filepath.Dir(os.Args[0])
 }

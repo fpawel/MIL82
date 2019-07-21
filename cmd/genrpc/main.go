@@ -29,8 +29,6 @@ func main() {
 		r.TypeOf((*api.PartiesSvc)(nil)),
 	}, map[string]string{
 		"ProductInfo": "Product",
-		"WorkInfo":    "JournalWork",
-		"EntryInfo":   "JournalEntry",
 	})
 
 	notifySvcSrc := delphirpc.NewNotifyServicesSrc("notify_services", servicesSrc.DataTypes, []delphirpc.NotifyServiceType{

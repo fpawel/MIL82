@@ -39,7 +39,7 @@
 
 {% func (x reportTable) View() %}
     <table class="tab2">
-        <caption>{%s varName[x.Var] %}</caption>
+        <caption>{%s mil82.VarName[x.Var] %}</caption>
         <thead>
             <tr>
                 <th>Адрес</th>
