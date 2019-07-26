@@ -18,7 +18,7 @@ func delay(what string, duration time.Duration) error {
 	defer func() {
 		log = originalLog
 	}()
-	log = gohelp.LogWithKeys(log,
+	log = gohelp.LogPrependSuffixKeys(log,
 		"фоновый_опрос", what,
 		"общая_длительность_задержки", helpstr.FormatDuration(duration),
 	)

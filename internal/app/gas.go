@@ -11,7 +11,7 @@ import (
 
 func switchGas(n int) error {
 
-	log := gohelp.LogWithKeys(log, "пневмоблок", n)
+	log := gohelp.LogPrependSuffixKeys(log, "пневмоблок", n)
 	log.Info("переключение")
 
 	_, err := modbus.Request{
@@ -20,7 +20,7 @@ func switchGas(n int) error {
 		Data: []byte{
 			0, 0x10, 0, 1, 2, 0, byte(n),
 		},
-	}.GetResponse(log, responseReaderGasBlock, nil)
+	}.GetResponse(log, ctxWork, portGas, nil)
 	if err == nil {
 		return nil
 	}

@@ -19,13 +19,13 @@ func readProductVarWithContext(addr modbus.Addr, VarCode modbus.Var, ctx context
 
 	defer pauseWithContext(ctx.Done(), cfg.Get().InterrogateProductVarInterval())
 
-	log := gohelp.LogWithKeys(log, "адрес", addr, "var", VarCode)
+	log := gohelp.LogPrependSuffixKeys(log, "адрес", addr, "var", VarCode)
 
 	//if addr == 1 || addr == 2 || addr == 3 {
 	//	return fakeReadAddrVarValue(ctx, addr, VarCode)
 	//}
 
-	value, err := modbus.Read3BCD(log, responseReaderProducts(ctx), addr, VarCode)
+	value, err := modbus.Read3BCD(log, ctx, portProducts, addr, VarCode)
 	if err == nil {
 		notify.ReadVar(log, types.AddrVarValue{Addr: addr, VarCode: VarCode, Value: value})
 		charts.AddPointToLastBucket(addr, VarCode, value)

@@ -27,7 +27,7 @@ func runWork(parentCtx context.Context, createNewChart bool, workName string, wo
 
 	wgWork.Add(1)
 
-	log = gohelp.NewLogWithKeys("работа", workName)
+	log = gohelp.NewLogWithSuffixKeys("работа", workName)
 
 	notify.WorkStarted(log, workName)
 
