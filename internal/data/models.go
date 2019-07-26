@@ -21,7 +21,6 @@ type PartySettings struct {
 
 type Product struct {
 	ProductID int64       `db:"product_id"`
-	PartyID   int64       `db:"party_id"`
 	Serial    int         `db:"serial"`
 	Addr      modbus.Addr `db:"addr"`
 }

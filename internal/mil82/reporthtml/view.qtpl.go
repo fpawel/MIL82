@@ -2,10 +2,11 @@
 // See https://github.com/valyala/quicktemplate for details.
 
 //line view.qtpl:2
-package mil82
+package reporthtml
 
 //line view.qtpl:2
 import (
+	"github.com/fpawel/mil82/internal/mil82"
 	qtio422016 "io"
 
 	qt422016 "github.com/valyala/quicktemplate"
@@ -193,7 +194,7 @@ func (x reportTable) StreamView(qw422016 *qt422016.Writer) {
     <table class="tab2">
         <caption>`)
 	//line view.qtpl:42
-	qw422016.E().S(varName[x.Var])
+	qw422016.E().S(mil82.VarName[x.Var])
 	//line view.qtpl:42
 	qw422016.N().S(`</caption>
         <thead>

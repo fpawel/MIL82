@@ -4,26 +4,37 @@ import (
 	"database/sql"
 	"github.com/fpawel/gohelp"
 	"github.com/fpawel/mil82/internal"
+	"github.com/jmoiron/sqlx"
 	"path/filepath"
 )
 
 //go:generate go run github.com/fpawel/gohelp/cmd/sqlstr/...
 
 var (
-	DB = gohelp.OpenSqliteDBx(filepath.Join(internal.DataDir(), "mil82.sqlite"))
+	DB = func() *sqlx.DB {
+		db := gohelp.OpenSqliteDBx(filepath.Join(internal.DataDir(), "mil82.sqlite"))
+		db.MustExec(SQLCreate)
+		return db
+	}()
 )
-
-func init() {
-	DB.MustExec(SQLCreate)
-}
 
 func LastParty() (party Party) {
 	err := DB.Get(&party, `SELECT * FROM last_party`)
 	if err == sql.ErrNoRows {
-		DB.MustExec(`INSERT INTO party DEFAULT VALUES`)
+		DB.MustExec(`INSERT INTO last_party DEFAULT VALUES`)
 		err = DB.Get(&party, `SELECT * FROM last_party`)
 	}
 	if err != nil {
+		panic(err)
+	}
+	return
+}
+
+func Products(partyID int64) (products []Product) {
+	if err := DB.Select(&products, `
+SELECT product_id, serial, addr FROM product 
+WHERE party_id = ? 
+ORDER BY product_id`, partyID); err != nil {
 		panic(err)
 	}
 	return

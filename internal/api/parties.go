@@ -1,8 +1,10 @@
 package api
 
 import (
+	"github.com/fpawel/comm/modbus"
 	"github.com/fpawel/mil82/internal/api/types"
 	"github.com/fpawel/mil82/internal/data"
+	"github.com/fpawel/mil82/internal/mil82/report"
 )
 
 type PartiesSvc struct{}
@@ -41,6 +43,19 @@ WHERE cast(strftime('%Y', created_at) AS INT) = ?
   AND cast(strftime('%m', created_at) AS INT) = ?
 ORDER BY created_at`, x.Year, x.Month); err != nil {
 		panic(err)
+	}
+	return nil
+}
+
+func (_ *PartiesSvc) PartyProductsValues(x [2]int64, r *report.Table) error {
+	*r = report.PartyProductsValues(x[0], modbus.Var(x[1]))
+	return nil
+}
+
+func (_ *PartiesSvc) PartyProducts(x [1]int64, r *[]data.Product) error {
+	*r = data.Products(x[0])
+	if *r == nil {
+		*r = []data.Product{}
 	}
 	return nil
 }

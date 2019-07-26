@@ -3,7 +3,8 @@ package api
 import (
 	"github.com/fpawel/comm/modbus"
 	"github.com/fpawel/mil82/internal/data"
-	"github.com/fpawel/mil82/internal/party"
+	"github.com/fpawel/mil82/internal/last_party"
+	"github.com/fpawel/mil82/internal/mil82/report"
 	"strconv"
 )
 
@@ -16,7 +17,7 @@ func (_ *LastPartySvc) Party(_ struct{}, r *data.Party) error {
 
 func (_ *LastPartySvc) SetPartySettings(x struct{ A data.PartySettings }, _ *struct{}) error {
 	data.DB.MustExec(`
-UPDATE party SET product_type = ?, c1 = ?, c2 = ?, c3 = ?, c4 = ?
+UPDATE last_party SET product_type = ?, c1 = ?, c2 = ?, c3 = ?, c4 = ?
 WHERE party_id = (SELECT party_id FROM last_party)`,
 		x.A.ProductType, x.A.C1, x.A.C2, x.A.C3, x.A.C4)
 	return nil
@@ -53,14 +54,14 @@ func (_ *LastPartySvc) SetProductAddr(x struct {
 	return nil
 }
 
-func (_ *LastPartySvc) DeleteProduct(productID [1]int64, r *[]party.Product) error {
+func (_ *LastPartySvc) DeleteProduct(productID [1]int64, r *[]last_party.LastPartyProduct) error {
 	data.DB.MustExec(`DELETE FROM product WHERE product_id = ?`, productID[0])
-	*r = party.Products()
+	*r = last_party.Products()
 	return nil
 }
 
-func (_ *LastPartySvc) AddNewProduct(_ struct{}, r *[]party.Product) error {
-	products := party.Products()
+func (_ *LastPartySvc) AddNewProduct(_ struct{}, r *[]last_party.LastPartyProduct) error {
+	products := last_party.Products()
 	addresses := make(map[modbus.Addr]struct{})
 	serials := make(map[int]struct{})
 	a := struct{}{}
@@ -84,14 +85,27 @@ func (_ *LastPartySvc) AddNewProduct(_ struct{}, r *[]party.Product) error {
 INSERT INTO product( party_id, serial, addr) 
 VALUES (?,?,?)`, data.LastParty().PartyID, serial, addr)
 
-	*r = party.Products()
+	*r = last_party.Products()
 	return nil
 }
 
-func (_ *LastPartySvc) Products(_ struct{}, r *[]party.Product) error {
-	*r = party.Products()
+func (_ *LastPartySvc) Products(_ struct{}, r *[]last_party.LastPartyProduct) error {
+	*r = last_party.Products()
 	if *r == nil {
-		*r = []party.Product{}
+		*r = []last_party.LastPartyProduct{}
 	}
+	return nil
+}
+
+func (_ *LastPartySvc) Products1(_ struct{}, r *[]data.Product) error {
+	*r = data.Products(data.LastParty().PartyID)
+	if *r == nil {
+		*r = []data.Product{}
+	}
+	return nil
+}
+
+func (_ *LastPartySvc) ProductsValues(x [1]int64, r *report.Table) error {
+	*r = report.PartyProductsValues(data.LastParty().PartyID, modbus.Var(x[0]))
 	return nil
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/fpawel/mil82/internal/api/notify"
 	"github.com/fpawel/mil82/internal/api/types"
 	"github.com/fpawel/mil82/internal/cfg"
-	"github.com/fpawel/mil82/internal/party"
+	"github.com/fpawel/mil82/internal/last_party"
 	"time"
 )
 
@@ -54,7 +54,7 @@ func doDelay(what string, duration time.Duration) error {
 			return ctxWork.Err()
 		}
 
-		products := party.CheckedProducts()
+		products := last_party.CheckedProducts()
 		if len(products) == 0 {
 			return merry.New("для опроса необходимо установить галочку для как минимум одиного прибора")
 		}

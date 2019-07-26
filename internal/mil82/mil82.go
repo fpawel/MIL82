@@ -2,6 +2,7 @@ package mil82
 
 import (
 	"github.com/fpawel/comm/modbus"
+	"github.com/fpawel/mil82/internal/data"
 )
 
 type Work string
@@ -37,6 +38,28 @@ const (
 	Temp90    Temp = "temp_90"
 )
 
-var Vars = []modbus.Var{
-	VarConc, VarTemp, Var16, VarCurr, Var8, Var10, VarWork, VarRef,
-}
+var (
+	VarName = func() map[modbus.Var]string {
+		type Var struct {
+			Name string     `db:"name"`
+			Var  modbus.Var `db:"var"`
+		}
+		var vars []Var
+		if err := data.DB.Select(&vars, `SELECT * FROM var`); err != nil {
+			panic(err)
+		}
+
+		m := make(map[modbus.Var]string)
+		for _, v := range vars {
+			m[v.Var] = v.Name
+		}
+		return m
+	}()
+
+	Vars = []modbus.Var{
+		VarConc, VarTemp, Var16, VarCurr, Var8, Var10, VarWork, VarRef,
+	}
+	Temps  = []Temp{TempMinus, Temp20, TempPlus}
+	Temps2 = []Temp{TempMinus, Temp20, TempPlus, Temp90}
+	Works  = []Work{WorkLin, WorkTemp, WorkCheckup, WorkTex1, WorkTex2}
+)
