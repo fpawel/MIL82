@@ -48,7 +48,5 @@ func (_ *ConfigSvc) SetPlaceChecked(x struct {
 	c := cfg.Get()
 	c.SetPlaceChecked(x.Place, x.Checked)
 	cfg.Set(c)
-	cfg.Save()
-
 	return nil
 }

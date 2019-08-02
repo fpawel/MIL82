@@ -45,6 +45,7 @@ func Set(v Config) {
 	mu.Lock()
 	defer mu.Unlock()
 	must.UnmarshalJSON(must.MarshalJSON(&v), &config)
+	must.WriteFile(fileName(), must.MarshalIndentJSON(&config, "", "    "), 0666)
 	return
 }
 
@@ -76,12 +77,6 @@ func (c *Config) SetPlaceChecked(place int, checked bool) {
 	} else {
 		c.PlacesUncheck = append(c.PlacesUncheck, place)
 	}
-}
-
-func Save() {
-	mu.Lock()
-	defer mu.Unlock()
-	must.WriteFile(fileName(), must.MarshalIndentJSON(&config, "", "    "), 0666)
 }
 
 func Open() {

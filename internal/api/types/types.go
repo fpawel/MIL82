@@ -53,7 +53,7 @@ type WorkResultInfo struct {
 }
 
 type DelayInfo struct {
-	Run     bool
-	Seconds int
-	What    string
+	TotalSeconds,
+	ElapsedSeconds int
+	What string
 }

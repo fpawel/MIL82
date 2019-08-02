@@ -4,7 +4,7 @@ const SQLCreate = `
 PRAGMA foreign_keys = ON;
 PRAGMA encoding = 'UTF-8';
 
-CREATE TABLE IF NOT EXISTS last_party
+CREATE TABLE IF NOT EXISTS party
 (
     party_id     INTEGER PRIMARY KEY NOT NULL,
     created_at   TIMESTAMP           NOT NULL DEFAULT (DATETIME('now', '+3 hours')),
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS product
     addr       SMALLINT            NOT NULL CHECK (addr > 0),
     UNIQUE (party_id, addr),
     UNIQUE (party_id, serial),
-    FOREIGN KEY (party_id) REFERENCES last_party (party_id) ON DELETE CASCADE
+    FOREIGN KEY (party_id) REFERENCES party (party_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS work
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS gas
     gas INTEGER NOT NULL PRIMARY KEY
 );
 
-INSERT OR IGNORE INTO temp
+INSERT OR IGNORE INTO gas
 VALUES (1),
        (2),
        (3),
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS product_coefficient
 
 CREATE VIEW IF NOT EXISTS last_party AS
 SELECT *
-FROM last_party
+FROM party
 ORDER BY created_at DESC
 LIMIT 1;
 

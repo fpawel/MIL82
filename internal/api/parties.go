@@ -5,6 +5,7 @@ import (
 	"github.com/fpawel/mil82/internal/api/types"
 	"github.com/fpawel/mil82/internal/data"
 	"github.com/fpawel/mil82/internal/mil82/report"
+	"time"
 )
 
 type PartiesSvc struct{}
@@ -57,5 +58,11 @@ func (_ *PartiesSvc) PartyProducts(x [1]int64, r *[]data.Product) error {
 	if *r == nil {
 		*r = []data.Product{}
 	}
+	return nil
+}
+
+func (_ *PartiesSvc) NewParty(_ struct{}, _ *struct{}) error {
+	data.DB.MustExec(`INSERT INTO party(created_at) VALUES(?)`, time.Now())
+	data.DB.MustExec(`INSERT INTO product(party_id, serial, addr) VALUES ( (SELECT last_party.party_id FROM last_party), 1, 1)`)
 	return nil
 }

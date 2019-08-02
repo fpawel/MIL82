@@ -18,6 +18,13 @@ var (
 	}()
 )
 
+func GetParty(partyID int64) (party Party) {
+	if err := DB.Get(&party, `SELECT * FROM party WHERE party_id=?`, partyID); err != nil {
+		panic(err)
+	}
+	return
+}
+
 func LastParty() (party Party) {
 	err := DB.Get(&party, `SELECT * FROM last_party`)
 	if err == sql.ErrNoRows {

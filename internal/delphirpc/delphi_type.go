@@ -8,7 +8,7 @@ import (
 type delphiType struct {
 	name    string
 	members map[string]delphiType
-	elem    delphiType
+	elem    *delphiType
 	kind    delphiTypeKind
 }
 
@@ -68,10 +68,11 @@ func newDelphiType(t r.Type) delphiType {
 		return pod("string")
 
 	case r.Array, r.Slice:
+		elem := newDelphiType(t.Elem())
 		return delphiType{
 			name: t.Name(),
 			kind: delphiArray,
-			elem: newDelphiType(t.Elem()),
+			elem: &elem,
 		}
 
 	case r.Struct:

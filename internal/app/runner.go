@@ -5,13 +5,12 @@ import (
 	"github.com/fpawel/comm"
 	"github.com/fpawel/mil82/internal/cfg"
 	"github.com/fpawel/mil82/internal/last_party"
-	"time"
 )
 
 type runner struct{}
 
 func (_ runner) Cancel() {
-	cancelFunc()
+	cancelWorkFunc()
 	log.Info("выполнение прервано")
 }
 
@@ -21,22 +20,21 @@ func (_ runner) SkipDelay() {
 }
 
 func (_ runner) RunMainWork() {
-	runWork(ctxApp, true, "настройка МИЛ-82", func() error {
+	runWork("настройка МИЛ-82", func(x worker) error {
 
-		if err := switchGas(1); err != nil {
+		if err := blowGas(x, 1); err != nil {
 			return err
 		}
-
-		if err := delay("продувка ПГС1", 2*time.Minute); err != nil {
+		if err := blowGas(x, 2); err != nil {
 			return err
 		}
-		return delay("продувка ПГС2", time.Minute)
+		return nil
 	})
 }
 
 func (_ runner) RunReadVars() {
 
-	runWork(ctxApp, true, "опрос", func() error {
+	runWork("опрос", func(x worker) error {
 		vars := cfg.Get().Vars
 		for {
 			products := last_party.CheckedProducts()
@@ -46,9 +44,9 @@ func (_ runner) RunReadVars() {
 		loopProducts:
 			for _, p := range products {
 				for _, v := range vars {
-					_, err := readProductVar(p.Addr, v.Code)
+					_, err := readProductVar(x, p.Addr, v.Code)
 					if err != nil {
-						if merry.Is(err, comm.ErrProtocol) {
+						if merry.Is(err, comm.Err) {
 							continue loopProducts
 						}
 						return err

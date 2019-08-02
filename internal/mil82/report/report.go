@@ -14,28 +14,48 @@ type Table struct {
 }
 
 type Row struct {
-	Cells []string
+	Cells []Cell
 }
 
+type Cell struct {
+	ValueType    ValueType
+	Text, Detail string
+}
+
+type ValueType int
+
+const (
+	vtNone ValueType = iota
+	vtOk
+	vtError
+)
+
 func PartyProductsValues(partyID int64, Var modbus.Var) (r Table) {
-
-	type row []string
-
-	r = Table{
-		[]Row{
-			{row{"ID"}},
-			{row{"Сер.№"}},
-			{row{"Адрес"}},
-		},
+	type row []Cell
+	cell1 := func(s string) Cell {
+		return Cell{Text: s}
+	}
+	cell1f := func(format string, a ...interface{}) Cell {
+		return cell1(fmt.Sprintf(format, a...))
 	}
 
+	row1 := func(s string) Row {
+		return Row{row{cell1(s)}}
+	}
+	r = Table{
+		[]Row{
+			row1("ID"),
+			row1("Сер.№"),
+			row1("Адрес"),
+		},
+	}
 	var products []data.Product
 	if err := data.DB.Select(&products, `SELECT product_id, addr, serial FROM product WHERE party_id = ?`, partyID); err != nil {
 		panic(err)
 	}
 
 	addCell := func(n int, fmtStr string, v interface{}) {
-		r.Rows[n].Cells = append(r.Rows[n].Cells, fmt.Sprintf(fmtStr, v))
+		r.Rows[n].Cells = append(r.Rows[n].Cells, cell1f(fmtStr, v))
 	}
 	for _, p := range products {
 		addCell(0, "%d", p.ProductID)
@@ -45,11 +65,11 @@ func PartyProductsValues(partyID int64, Var modbus.Var) (r Table) {
 
 	for _, dn := range dataTables {
 
-		rows := []Row{{Cells: row{dn.title}}}
+		rows := []Row{row1(dn.title)}
 
 		for _, gas := range dn.gases {
-			row := make([]string, len(products)+1)
-			row[0] = fmt.Sprintf("ПГС%d", gas)
+			row := Row{Cells: make([]Cell, len(products)+1)}
+			row.Cells[0] = cell1f("ПГС%d", gas)
 			hasValue := false
 			for i, p := range products {
 				var v float64
@@ -63,10 +83,10 @@ func PartyProductsValues(partyID int64, Var modbus.Var) (r Table) {
 					panic(err)
 				}
 				hasValue = true
-				row[i+1] = strconv.FormatFloat(v, 'f', -1, 64)
+				row.Cells[i+1] = cell1(strconv.FormatFloat(v, 'f', -1, 64))
 			}
 			if hasValue {
-				rows = append(rows, Row{row})
+				rows = append(rows, row)
 			}
 		}
 
@@ -75,6 +95,25 @@ func PartyProductsValues(partyID int64, Var modbus.Var) (r Table) {
 		}
 	}
 	return
+}
+
+func errors(partyID int64) {
+	party := data.GetParty(partyID)
+	productType := mil82.ProductTypeByName(party.ProductType)
+
+	maxErr20 := func(Cn float64) float64 {
+		if productType.Component != mil82.CO2 {
+			return 2.5 + 0.05*Cn
+		}
+		switch productType.Scale {
+		case 4:
+			return 0.2 + 0.05*Cn
+		case 10:
+			return 0.5
+		default:
+			return 1
+		}
+	}
 }
 
 type dataTable struct {
@@ -101,3 +140,13 @@ var dataTables = func() []dataTable {
 		{"2. Второй техпрогон", mil82.WorkTex2, mil82.Temp20, gases134},
 	}
 }()
+
+func errorLimit(t int) float64 {
+
+	//let concErrorlimit (t:ProductType) concValue =
+	//	let scale = t.Scale
+	//if t.IsCH then 2.5m+0.05m * concValue
+	//elif scale=Sc4 then 0.2m + 0.05m * concValue
+	//elif scale=Sc10 then 0.5m
+	//elif scale=Sc20 then 1.0m else 0.m
+}

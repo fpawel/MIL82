@@ -94,7 +94,15 @@ const (
 		//line notify_api.qtpl:22
 		qw422016.N().S(`, )
     }
-    go peer.W.`)
+    `)
+		//line notify_api.qtpl:24
+		if m.serviceName != "Warning" {
+			//line notify_api.qtpl:24
+			qw422016.N().S(`go `)
+			//line notify_api.qtpl:24
+		}
+		//line notify_api.qtpl:24
+		qw422016.N().S(`peer.`)
 		//line notify_api.qtpl:24
 		qw422016.E().S(m.notifyFunc)
 		//line notify_api.qtpl:24
@@ -133,7 +141,15 @@ func `)
 			//line notify_api.qtpl:29
 			qw422016.N().S(`, )
     }
-    go peer.W.Notifyf( uintptr(msg`)
+    `)
+			//line notify_api.qtpl:31
+			if m.serviceName != "Warning" {
+				//line notify_api.qtpl:31
+				qw422016.N().S(`go `)
+				//line notify_api.qtpl:31
+			}
+			//line notify_api.qtpl:31
+			qw422016.N().S(`peer.Notifyf( uintptr(msg`)
 			//line notify_api.qtpl:31
 			qw422016.E().S(m.serviceName)
 			//line notify_api.qtpl:31

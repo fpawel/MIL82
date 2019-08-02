@@ -16,7 +16,7 @@ func TestCreateDB(t *testing.T) {
 			for d := 1; d <= 3; d++ {
 				fmt.Printf("%02d:%02d:%02d\n", d, m, y)
 				t := time.Date(y, m, d, 16, 12, 0, 0, time.Now().Location())
-				r, err := data.DB.Exec(`INSERT INTO last_party (created_at) VALUES (?)`, t)
+				r, err := data.DB.Exec(`INSERT INTO party (created_at) VALUES (?)`, t)
 				if err != nil {
 					panic(err)
 				}
@@ -35,16 +35,10 @@ func TestCreateDB(t *testing.T) {
 					if err != nil {
 						panic(err)
 					}
-					//s := "INSERT INTO product_value (product_id, var, work, gas, temp, value) VALUES "
-
 					var xs []string
 					for _, work := range Works {
-						temps := Temps
-						if work == WorkTemp {
-							temps = Temps2
-						}
 						for gas := Gas1; gas <= Gas4; gas++ {
-							for _, temp := range temps {
+							for _, temp := range work.Temps() {
 								for _, Var := range Vars {
 									value := rand.Float64() * 100
 									value = math.Round(value*100) / 100
@@ -54,8 +48,10 @@ func TestCreateDB(t *testing.T) {
 							}
 						}
 					}
-					data.DB.MustExec(
-						"INSERT INTO product_value (product_id, var, work, gas, temp, value) VALUES " + strings.Join(xs, ", "))
+					qStr := "INSERT INTO product_value (product_id, var, work, gas, temp, value) VALUES " +
+						strings.Join(xs, ", ")
+					//fmt.Println(qStr)
+					data.DB.MustExec(qStr)
 				}
 			}
 		}

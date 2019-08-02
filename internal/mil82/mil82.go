@@ -38,6 +38,10 @@ const (
 	Temp90    Temp = "temp_90"
 )
 
+func (x Work) Temps() []Temp {
+	return workTemp[x]
+}
+
 var (
 	VarName = func() map[modbus.Var]string {
 		type Var struct {
@@ -59,7 +63,13 @@ var (
 	Vars = []modbus.Var{
 		VarConc, VarTemp, Var16, VarCurr, Var8, Var10, VarWork, VarRef,
 	}
-	Temps  = []Temp{TempMinus, Temp20, TempPlus}
-	Temps2 = []Temp{TempMinus, Temp20, TempPlus, Temp90}
-	Works  = []Work{WorkLin, WorkTemp, WorkCheckup, WorkTex1, WorkTex2}
+	Works = []Work{WorkLin, WorkTemp, WorkCheckup, WorkTex1, WorkTex2}
+
+	workTemp = map[Work][]Temp{
+		WorkLin:     {Temp20},
+		WorkTemp:    {Temp20, TempMinus, TempPlus, Temp90},
+		WorkCheckup: {Temp20, TempMinus, TempPlus},
+		WorkTex1:    {Temp20, TempMinus, TempPlus},
+		WorkTex2:    {Temp20, TempMinus, TempPlus},
+	}
 )

@@ -60,6 +60,14 @@ func main() {
 			"Delay",
 			r.TypeOf((*types.DelayInfo)(nil)).Elem(),
 		},
+		{
+			"EndDelay",
+			r.TypeOf((*string)(nil)).Elem(),
+		},
+		{
+			"Status",
+			r.TypeOf((*string)(nil)).Elem(),
+		},
 	})
 
 	file := createFile("services.pas")
