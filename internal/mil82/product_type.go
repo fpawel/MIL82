@@ -26,6 +26,20 @@ func ProductTypeByName(s string) ProductType {
 	panic(s)
 }
 
+func (x ProductType) maxErr20(Cn float64) float64 {
+	if x.Component != CO2 {
+		return 2.5 + 0.05*Cn
+	}
+	switch x.Scale {
+	case 4:
+		return 0.2 + 0.05*Cn
+	case 10:
+		return 0.5
+	default:
+		return 1
+	}
+}
+
 var productTypes = []ProductType{
 	{Name: "00.00", Component: CO2, Scale: 4, K4: 5, K14: 0.1, K45: 60, K35: 5, K50: 0, TempMinus: -40, TempPlus: 80},
 	{Name: "00.01", Component: CO2, Scale: 10, K4: 5, K14: 0.1, K45: 60, K35: 5, K50: 0, TempMinus: -40, TempPlus: 80},

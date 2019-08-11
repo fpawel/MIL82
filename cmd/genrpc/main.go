@@ -14,24 +14,24 @@ import (
 func main() {
 	dir := filepath.Join(os.Getenv("DELPHIPATH"),
 		"src", "github.com", "fpawel", "mil82gui", "api")
-	winapp.EnsuredDirectory(dir)
+	if err := winapp.EnsuredDirectory(dir); err != nil {
+		panic(err)
+	}
 
 	createFile := func(fileName string) *os.File {
 		return must.Create(filepath.Join(dir, fileName))
 	}
 
-	servicesSrc := delphirpc.NewServicesSrc("services", "server_data_types", []r.Type{
+	servicesUnit := delphirpc.NewServicesUnit([]r.Type{
 		r.TypeOf((*api.LastPartySvc)(nil)),
 		r.TypeOf((*api.ConfigSvc)(nil)),
 		r.TypeOf((*api.RunnerSvc)(nil)),
 		r.TypeOf((*api.PeerSvc)(nil)),
 		r.TypeOf((*api.ChartsSvc)(nil)),
 		r.TypeOf((*api.PartiesSvc)(nil)),
-	}, map[string]string{
-		"ProductInfo": "Product",
 	})
 
-	notifySvcSrc := delphirpc.NewNotifyServicesSrc("notify_services", servicesSrc.DataTypes, []delphirpc.NotifyServiceType{
+	notifySvcSrc := delphirpc.NewNotifyServicesSrc(servicesUnit.TypesUnit, []delphirpc.NotifyServiceType{
 		{
 			"Panic",
 			r.TypeOf((*string)(nil)).Elem(),
@@ -71,11 +71,11 @@ func main() {
 	})
 
 	file := createFile("services.pas")
-	servicesSrc.WriteUnit(file)
+	servicesUnit.WriteUnit(file)
 	must.Close(file)
 
 	file = createFile("server_data_types.pas")
-	servicesSrc.DataTypes.WriteUnit(file)
+	servicesUnit.TypesUnit.WriteUnit(file)
 	must.Close(file)
 
 	file = createFile("notify_services.pas")

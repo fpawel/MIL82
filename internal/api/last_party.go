@@ -4,7 +4,7 @@ import (
 	"github.com/fpawel/comm/modbus"
 	"github.com/fpawel/mil82/internal/data"
 	"github.com/fpawel/mil82/internal/last_party"
-	"github.com/fpawel/mil82/internal/mil82/report"
+	"github.com/fpawel/mil82/internal/mil82"
 	"strconv"
 )
 
@@ -105,7 +105,7 @@ func (_ *LastPartySvc) Products1(_ struct{}, r *[]data.Product) error {
 	return nil
 }
 
-func (_ *LastPartySvc) ProductsValues(x [1]int64, r *report.Table) error {
-	*r = report.PartyProductsValues(data.LastParty().PartyID, modbus.Var(x[0]))
+func (_ *LastPartySvc) ProductsValues(x [1]int64, r *mil82.Table) error {
+	*r = mil82.NewParty(data.LastParty().PartyID).Report(modbus.Var(x[0]))
 	return nil
 }

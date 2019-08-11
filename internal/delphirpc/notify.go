@@ -2,18 +2,16 @@ package delphirpc
 
 import (
 	"fmt"
+	"log"
 	"path"
 	r "reflect"
 )
 
 type NotifyServicesSrc struct {
-	unitName string
-	interfaceUses,
-	implUses []string
 	types     map[string]string
 	goImports map[string]struct{}
 	services  []notifyService
-	DataTypes *TypesSrc
+	DataTypes *TypesUnit
 }
 
 type NotifyServiceType struct {
@@ -31,27 +29,29 @@ type notifyService struct {
 	instructionArg string
 }
 
-func NewNotifyServicesSrc(unitName string, d *TypesSrc, services []NotifyServiceType) *NotifyServicesSrc {
+func NewNotifyServicesSrc(d *TypesUnit, services []NotifyServiceType) *NotifyServicesSrc {
 	x := &NotifyServicesSrc{
-		unitName:      unitName,
-		interfaceUses: []string{d.unitName, "superobject", "Winapi.Windows", "Winapi.Messages"},
-		implUses:      []string{"Grijjy.Bson.Serialization", "stringutils", "sysutils"},
-		DataTypes:     d,
-		types:         make(map[string]string),
+		DataTypes: d,
+		types:     make(map[string]string),
 		goImports: map[string]struct{}{
 			"fmt":                                   {},
 			"github.com/fpawel/mil82/internal/peer": {},
 			"github.com/powerman/structlog":         {},
 		},
 	}
-	for _, s := range services {
-		x.DataTypes.addType(s.ParamType)
 
-		t := delphiTypeName(x.DataTypes.typesNames, s.ParamType)
+	for _, s := range services {
+
+		t, err := x.DataTypes.add(s.ParamType)
+
+		if err != nil {
+			log.Fatalln("notify_service:", s.ServiceName, "error:", err)
+		}
+
 		y := notifyService{
 			serviceName: s.ServiceName,
-			typeName:    t,
-			handlerType: strEnsureFirstT(t) + "Handler",
+			typeName:    t.TypeName(),
+			handlerType: t.TypeName() + "Handler",
 			goType:      s.ParamType.Name(),
 		}
 		x.types[y.typeName] = y.handlerType
@@ -87,7 +87,7 @@ func NewNotifyServicesSrc(unitName string, d *TypesSrc, services []NotifyService
 			y.instructionArg = "fmt.Sprintf(\"%v\", arg)"
 
 		case r.Struct:
-			y.instructionGetFromStr = fmt.Sprintf("_deserializer.deserialize<%s>(str)", t)
+			y.instructionGetFromStr = fmt.Sprintf("_deserializer.deserialize<%s>(str)", t.TypeName())
 			y.notifyFunc = "NotifyJson"
 			y.instructionArg = "arg"
 

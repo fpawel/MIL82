@@ -4,7 +4,7 @@ import (
 	"github.com/fpawel/comm/modbus"
 	"github.com/fpawel/mil82/internal/api/types"
 	"github.com/fpawel/mil82/internal/data"
-	"github.com/fpawel/mil82/internal/mil82/report"
+	"github.com/fpawel/mil82/internal/mil82"
 	"time"
 )
 
@@ -48,8 +48,8 @@ ORDER BY created_at`, x.Year, x.Month); err != nil {
 	return nil
 }
 
-func (_ *PartiesSvc) PartyProductsValues(x [2]int64, r *report.Table) error {
-	*r = report.PartyProductsValues(x[0], modbus.Var(x[1]))
+func (_ *PartiesSvc) PartyProductsValues(x [2]int64, r *mil82.Table) error {
+	*r = mil82.NewParty(x[0]).Report(modbus.Var(x[1]))
 	return nil
 }
 

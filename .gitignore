@@ -10,3 +10,5 @@ build/*.json
 build/*.ini
 build/*.log
 build/*.position
+*.qtpl.go
+internal/api/notify/api_generated.go
