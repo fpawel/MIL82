@@ -2,17 +2,21 @@ package app
 
 import (
 	"context"
-	"github.com/fpawel/mil82/internal/cfg"
-	"github.com/fpawel/mil82/internal/charts"
+	"github.com/fpawel/dseries"
+	"github.com/fpawel/mil82/internal"
 	"github.com/fpawel/mil82/internal/data"
 	"github.com/fpawel/mil82/internal/peer"
 	"github.com/lxn/win"
 	"github.com/powerman/structlog"
+	"path/filepath"
 	"sync"
 )
 
 func Run() {
-	cfg.Open()
+
+	peer.AssertRunOnes()
+
+	dseries.Open(filepath.Join(internal.DataDir(), "mil82.series.sqlite"))
 
 	var cancel func()
 	ctxApp, cancel = context.WithCancel(context.TODO())
@@ -31,7 +35,7 @@ func Run() {
 	closeHttpServer()
 	peer.Close()
 	log.ErrIfFail(data.DB.Close)
-	log.ErrIfFail(charts.DB.Close)
+	log.ErrIfFail(dseries.Close)
 }
 
 type peerNotifier struct{}

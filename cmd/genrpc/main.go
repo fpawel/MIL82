@@ -1,92 +1,70 @@
 package main
 
 import (
-	"github.com/fpawel/gohelp/must"
-	"github.com/fpawel/gohelp/winapp"
+	"github.com/fpawel/dseries"
+	"github.com/fpawel/gohelp/delphi/delphirpc"
 	"github.com/fpawel/mil82/internal/api"
 	"github.com/fpawel/mil82/internal/api/types"
-	"github.com/fpawel/mil82/internal/delphirpc"
 	"os"
 	"path/filepath"
 	r "reflect"
 )
 
 func main() {
-	dir := filepath.Join(os.Getenv("DELPHIPATH"),
-		"src", "github.com", "fpawel", "mil82gui", "api")
-	if err := winapp.EnsuredDirectory(dir); err != nil {
-		panic(err)
-	}
 
-	createFile := func(fileName string) *os.File {
-		return must.Create(filepath.Join(dir, fileName))
-	}
-
-	servicesUnit := delphirpc.NewServicesUnit([]r.Type{
-		r.TypeOf((*api.LastPartySvc)(nil)),
-		r.TypeOf((*api.ConfigSvc)(nil)),
-		r.TypeOf((*api.RunnerSvc)(nil)),
-		r.TypeOf((*api.PeerSvc)(nil)),
-		r.TypeOf((*api.ChartsSvc)(nil)),
-		r.TypeOf((*api.PartiesSvc)(nil)),
+	delphirpc.WriteSources(delphirpc.SrcServices{
+		Dir: filepath.Join(os.Getenv("DELPHIPATH"),
+			"src", "github.com", "fpawel", "mil82gui", "api"),
+		Types: []r.Type{
+			r.TypeOf((*api.LastPartySvc)(nil)),
+			r.TypeOf((*api.ConfigSvc)(nil)),
+			r.TypeOf((*api.RunnerSvc)(nil)),
+			r.TypeOf((*api.PeerSvc)(nil)),
+			r.TypeOf((*dseries.ChartsSvc)(nil)),
+			r.TypeOf((*api.PartiesSvc)(nil)),
+		},
+	}, delphirpc.SrcNotify{
+		Dir: filepath.Join(os.Getenv("GOPATH"),
+			"src", "github.com", "fpawel", "mil82", "internal", "api", "notify"),
+		Types: []delphirpc.NotifyServiceType{
+			{
+				"Panic",
+				r.TypeOf((*string)(nil)).Elem(),
+			},
+			{
+				"ReadVar",
+				r.TypeOf((*types.AddrVarValue)(nil)).Elem(),
+			},
+			{
+				"AddrError",
+				r.TypeOf((*types.AddrError)(nil)).Elem(),
+			},
+			{
+				"WorkStarted",
+				r.TypeOf((*string)(nil)).Elem(),
+			},
+			{
+				"WorkComplete",
+				r.TypeOf((*types.WorkResultInfo)(nil)).Elem(),
+			},
+			{
+				"Warning",
+				r.TypeOf((*string)(nil)).Elem(),
+			},
+			{
+				"Delay",
+				r.TypeOf((*types.DelayInfo)(nil)).Elem(),
+			},
+			{
+				"EndDelay",
+				r.TypeOf((*string)(nil)).Elem(),
+			},
+			{
+				"Status",
+				r.TypeOf((*string)(nil)).Elem(),
+			},
+		},
+		PeerPackage: "github.com/fpawel/mil82/internal/peer",
 	})
-
-	notifySvcSrc := delphirpc.NewNotifyServicesSrc(servicesUnit.TypesUnit, []delphirpc.NotifyServiceType{
-		{
-			"Panic",
-			r.TypeOf((*string)(nil)).Elem(),
-		},
-		{
-			"ReadVar",
-			r.TypeOf((*types.AddrVarValue)(nil)).Elem(),
-		},
-		{
-			"AddrError",
-			r.TypeOf((*types.AddrError)(nil)).Elem(),
-		},
-		{
-			"WorkStarted",
-			r.TypeOf((*string)(nil)).Elem(),
-		},
-		{
-			"WorkComplete",
-			r.TypeOf((*types.WorkResultInfo)(nil)).Elem(),
-		},
-		{
-			"Warning",
-			r.TypeOf((*string)(nil)).Elem(),
-		},
-		{
-			"Delay",
-			r.TypeOf((*types.DelayInfo)(nil)).Elem(),
-		},
-		{
-			"EndDelay",
-			r.TypeOf((*string)(nil)).Elem(),
-		},
-		{
-			"Status",
-			r.TypeOf((*string)(nil)).Elem(),
-		},
-	})
-
-	file := createFile("services.pas")
-	servicesUnit.WriteUnit(file)
-	must.Close(file)
-
-	file = createFile("server_data_types.pas")
-	servicesUnit.TypesUnit.WriteUnit(file)
-	must.Close(file)
-
-	file = createFile("notify_services.pas")
-	notifySvcSrc.WriteUnit(file)
-	must.Close(file)
-
-	dir = filepath.Join(os.Getenv("GOPATH"),
-		"src", "github.com", "fpawel", "mil82", "internal", "api", "notify")
-
-	file = must.Create(filepath.Join(dir, "api_generated.go"))
-	notifySvcSrc.WriteGoFile(file)
-	must.Close(file)
 
 }

@@ -1,13 +1,15 @@
 package app
 
 import (
+	"context"
 	"fmt"
+	"github.com/ansel1/merry"
 	"github.com/fpawel/comm/modbus"
+	"github.com/fpawel/dseries"
 	"github.com/fpawel/gohelp"
 	"github.com/fpawel/mil82/internal/api/notify"
 	"github.com/fpawel/mil82/internal/api/types"
 	"github.com/fpawel/mil82/internal/cfg"
-	"github.com/fpawel/mil82/internal/charts"
 )
 
 func readProductVar(x worker, addr modbus.Addr, VarCode modbus.Var) (float64, error) {
@@ -16,10 +18,12 @@ func readProductVar(x worker, addr modbus.Addr, VarCode modbus.Var) (float64, er
 	value, err := modbus.Read3BCD(x.log, x.ctx, x.portProducts, addr, VarCode)
 	if err == nil {
 		notify.ReadVar(log, types.AddrVarValue{Addr: addr, VarCode: VarCode, Value: value})
-		charts.AddPointToLastBucket(addr, VarCode, value)
+		dseries.AddPoint(addr, VarCode, value)
 		return value, nil
 	}
-	notify.AddrError(log, types.AddrError{Addr: addr, Message: err.Error()})
+	if !merry.Is(err, context.Canceled){
+		notify.AddrError(log, types.AddrError{Addr: addr, Message: err.Error()})
+	}
 	return value, err
 }
 

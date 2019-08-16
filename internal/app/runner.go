@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/ansel1/merry"
 	"github.com/fpawel/comm"
+	"github.com/fpawel/dseries"
 	"github.com/fpawel/mil82/internal/cfg"
 	"github.com/fpawel/mil82/internal/last_party"
 )
@@ -22,6 +23,13 @@ func (_ runner) SkipDelay() {
 func (_ runner) RunMainWork() {
 	runWork("настройка МИЛ-82", func(x worker) error {
 
+		if len(last_party.CheckedProducts()) == 0 {
+			return errNoCheckedProducts.Here()
+		}
+
+		dseries.CreateNewBucket("настройка МИЛ-82")
+		defer dseries.Save()
+
 		if err := blowGas(x, 1); err != nil {
 			return err
 		}
@@ -34,12 +42,17 @@ func (_ runner) RunMainWork() {
 
 func (_ runner) RunReadVars() {
 
-	runWork("опрос", func(x worker) error {
+	runWork("опрос МИЛ-82", func(x worker) error {
+		if len(last_party.CheckedProducts()) == 0 {
+			return errNoCheckedProducts.Here()
+		}
 		vars := cfg.Get().Vars
+		dseries.CreateNewBucket("опрос МИЛ-82")
+		defer dseries.Save()
 		for {
 			products := last_party.CheckedProducts()
 			if len(products) == 0 {
-				return merry.New("для опроса необходимо установить галочку для как минимум одного прибора")
+				return errNoCheckedProducts.Here()
 			}
 		loopProducts:
 			for _, p := range products {
@@ -56,3 +69,5 @@ func (_ runner) RunReadVars() {
 		}
 	})
 }
+
+var errNoCheckedProducts = merry.New("для опроса необходимо установить галочку для как минимум одного прибора")

@@ -2,9 +2,9 @@ package app
 
 import (
 	"fmt"
+	"github.com/fpawel/dseries"
 	"github.com/fpawel/gohelp/must"
 	"github.com/fpawel/mil82/internal/api"
-	"github.com/fpawel/mil82/internal/charts"
 	"github.com/fpawel/mil82/internal/data"
 	"github.com/fpawel/mil82/internal/mil82/reporthtml"
 	"github.com/powerman/rpc-codec/jsonrpc2"
@@ -24,7 +24,7 @@ func startHttpServer() func() {
 		new(api.ConfigSvc),
 		api.NewPeerSvc(peerNotifier{}),
 		api.NewRunnerSvc(runner{}),
-		new(api.ChartsSvc),
+		new(dseries.ChartsSvc),
 		new(api.PartiesSvc),
 	} {
 		must.AbortIf(rpc.Register(svcObj))
@@ -33,13 +33,10 @@ func startHttpServer() func() {
 	// Server provide a HTTP transport on /rpc endpoint.
 	http.Handle("/rpc", jsonrpc2.HTTPHandler(nil))
 
-	http.HandleFunc("/chart", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
-		w.Header().Set("Content-Type", "application/octet-stream")
-		w.Header().Set("Accept", "application/octet-stream")
-		bucketID, _ := strconv.ParseInt(r.URL.Query().Get("bucket"), 10, 64)
-		charts.WritePointsResponse(w, bucketID)
-	})
+	http.HandleFunc("/chart", dseries.HandleRequestChart)
+
+	minifyHtml := minify.New()
+	minifyHtml.AddFunc("text/html", html.Minify)
 
 	http.HandleFunc("/report", func(w http.ResponseWriter, r *http.Request) {
 		mw := minifyHtml.ResponseWriter(w, r)
@@ -96,8 +93,4 @@ func startHttpServer() func() {
 	}
 }
 
-var minifyHtml = minify.New()
 
-func init() {
-	minifyHtml.AddFunc("text/html", html.Minify)
-}
