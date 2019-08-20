@@ -17,12 +17,12 @@ func readProductVar(x worker, addr modbus.Addr, VarCode modbus.Var) (float64, er
 	x.log = gohelp.LogPrependSuffixKeys(x.log, "адрес", addr, "var", VarCode)
 	value, err := modbus.Read3BCD(x.log, x.ctx, x.portProducts, addr, VarCode)
 	if err == nil {
-		notify.ReadVar(log, types.AddrVarValue{Addr: addr, VarCode: VarCode, Value: value})
+		notify.ReadVar(nil, types.AddrVarValue{Addr: addr, VarCode: VarCode, Value: value})
 		dseries.AddPoint(addr, VarCode, value)
 		return value, nil
 	}
-	if !merry.Is(err, context.Canceled){
-		notify.AddrError(log, types.AddrError{Addr: addr, Message: err.Error()})
+	if !merry.Is(err, context.Canceled) {
+		notify.AddrError(nil, types.AddrError{Addr: addr, Message: err.Error()})
 	}
 	return value, err
 }

@@ -39,8 +39,6 @@ func main() {
 			structlog.KeySource: " %6[2]s",
 			structlog.KeyUnit:   " %6[2]s",
 			"config":            " %+[2]v",
-			"запрос":            " %[1]s=`% [2]X`",
-			"ответ":             " %[1]s=`% [2]X`",
 			"работа":            " %[1]s=`%[2]s`",
 			"фоновый_опрос":     " %[1]s=`%[2]s`",
 			"ARG":               " %[1]s=`%[2]s`",
@@ -49,5 +47,3 @@ func main() {
 	app.Run()
 
 }
-
-var log = structlog.New()

@@ -17,6 +17,7 @@ func Run() {
 	peer.AssertRunOnes()
 
 	dseries.Open(filepath.Join(internal.DataDir(), "mil82.series.sqlite"))
+	log.Println("charts: updated at", dseries.UpdatedAt())
 
 	var cancel func()
 	ctxApp, cancel = context.WithCancel(context.TODO())
