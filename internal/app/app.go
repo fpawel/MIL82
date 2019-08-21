@@ -3,18 +3,28 @@ package app
 import (
 	"context"
 	"github.com/fpawel/dseries"
+	"github.com/fpawel/gohelp/winapp"
 	"github.com/fpawel/mil82/internal"
+	"github.com/fpawel/mil82/internal/api/notify"
 	"github.com/fpawel/mil82/internal/data"
-	"github.com/fpawel/mil82/internal/peer"
 	"github.com/lxn/win"
 	"github.com/powerman/structlog"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"sync"
 )
 
 func Run() {
 
-	peer.AssertRunOnes()
+	// Преверяем, не было ли приложение запущено ранее.
+	// Если было, выдвигаем окно UI приложения на передний план и завершаем процесс.
+	if notify.ServerWindowAlreadyExists {
+		hWnd := winapp.FindWindow(notify.PeerWindowClassName)
+		win.ShowWindow(hWnd, win.SW_RESTORE)
+		win.SetForegroundWindow(hWnd)
+		log.Fatal("mil82.exe already executing")
+	}
 
 	dseries.Open(filepath.Join(internal.DataDir(), "mil82.series.sqlite"))
 	log.Println("charts: updated at", dseries.UpdatedAt())
@@ -22,7 +32,12 @@ func Run() {
 	var cancel func()
 	ctxApp, cancel = context.WithCancel(context.TODO())
 	closeHttpServer := startHttpServer()
-	peer.Init("")
+
+	if os.Getenv("ELCO_SKIP_RUN_PEER") != "true" {
+		if err := exec.Command(filepath.Join(filepath.Dir(os.Args[0]), "mil82gui.exe")).Start(); err != nil {
+			panic(err)
+		}
+	}
 	// цикл оконных сообщений
 	for {
 		var msg win.MSG
@@ -34,20 +49,9 @@ func Run() {
 	}
 	cancel()
 	closeHttpServer()
-	peer.Close()
+	notify.Window.Close()
 	log.ErrIfFail(data.DB.Close)
 	log.ErrIfFail(dseries.Close)
-}
-
-type peerNotifier struct{}
-
-func (_ peerNotifier) OnStarted() {
-	peer.InitPeer()
-}
-
-func (_ peerNotifier) OnClosed() {
-	peer.ResetPeer()
-	cancelWorkFunc()
 }
 
 var (

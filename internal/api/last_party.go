@@ -17,7 +17,7 @@ func (_ *LastPartySvc) Party(_ struct{}, r *data.Party) error {
 
 func (_ *LastPartySvc) SetPartySettings(x struct{ A data.PartySettings }, _ *struct{}) error {
 	data.DB.MustExec(`
-UPDATE last_party SET product_type = ?, c1 = ?, c2 = ?, c3 = ?, c4 = ?
+UPDATE party SET product_type = ?, c1 = ?, c2 = ?, c3 = ?, c4 = ?
 WHERE party_id = (SELECT party_id FROM last_party)`,
 		x.A.ProductType, x.A.C1, x.A.C2, x.A.C3, x.A.C4)
 	return nil

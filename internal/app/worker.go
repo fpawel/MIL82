@@ -45,21 +45,21 @@ func runWork(workName string, work func(x worker) error) {
 			wgWork.Done()
 		}()
 
-		notify.WorkStarted(worker.log, workName)
+		notify.WorkStarted(worker.log.Info, workName)
 		err := work(worker)
 		if err == nil {
 			worker.log.Info("выполнено успешно")
-			notify.WorkComplete(worker.log, types.WorkResultInfo{workName, types.WrOk, "успешно"})
+			notify.WorkComplete(worker.log.Info, types.WorkResultInfo{workName, types.WrOk, "успешно"})
 			return
 		}
 
 		if merry.Is(err, context.Canceled) {
 			worker.log.Warn("выполнение прервано")
-			notify.WorkComplete(worker.log, types.WorkResultInfo{workName, types.WrCanceled, "перервано"})
+			notify.WorkComplete(worker.log.Info, types.WorkResultInfo{workName, types.WrCanceled, "перервано"})
 			return
 		}
 		worker.log.PrintErr(err, "stack", myfmt.FormatMerryStacktrace(err))
-		notify.WorkComplete(worker.log, types.WorkResultInfo{workName, types.WrError, err.Error()})
+		notify.WorkComplete(worker.log.Info, types.WorkResultInfo{workName, types.WrError, err.Error()})
 	}()
 }
 
@@ -147,7 +147,7 @@ func performWithWarn(x worker, work func() error) error {
 
 	strErr := strings.Join(strings.Split(err.Error(), ": "), "\n\t -")
 
-	notify.Warningf(x.log, "Не удалось выполнить: %s\n\nПричина: %s", x.works[len(x.works)-1], strErr)
+	notify.Warningf(x.log.Info, "Не удалось выполнить: %s\n\nПричина: %s", x.works[len(x.works)-1], strErr)
 	if merry.Is(x.ctx.Err(), context.Canceled) {
 		return err
 	}

@@ -19,11 +19,12 @@ func main() {
 			r.TypeOf((*api.LastPartySvc)(nil)),
 			r.TypeOf((*api.ConfigSvc)(nil)),
 			r.TypeOf((*api.RunnerSvc)(nil)),
-			r.TypeOf((*api.PeerSvc)(nil)),
 			r.TypeOf((*dseries.ChartsSvc)(nil)),
 			r.TypeOf((*api.PartiesSvc)(nil)),
 		},
 	}, delphirpc.SrcNotify{
+		PeerWindowClassName:   "TMainFormMil82",
+		ServerWindowClassName: "Mil82ServerWindow",
 		Dir: filepath.Join(os.Getenv("GOPATH"),
 			"src", "github.com", "fpawel", "mil82", "internal", "api", "notify"),
 		Types: []delphirpc.NotifyServiceType{
@@ -64,7 +65,6 @@ func main() {
 				r.TypeOf((*string)(nil)).Elem(),
 			},
 		},
-		PeerPackage: "github.com/fpawel/mil82/internal/peer",
 	})
 
 }

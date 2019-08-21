@@ -22,7 +22,6 @@ func startHttpServer() func() {
 	for _, svcObj := range []interface{}{
 		new(api.LastPartySvc),
 		new(api.ConfigSvc),
-		api.NewPeerSvc(peerNotifier{}),
 		api.NewRunnerSvc(runner{}),
 		new(dseries.ChartsSvc),
 		new(api.PartiesSvc),
@@ -92,5 +91,3 @@ func startHttpServer() func() {
 		}
 	}
 }
-
-

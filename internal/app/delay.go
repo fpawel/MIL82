@@ -18,7 +18,6 @@ func delayf(x worker, duration time.Duration, format string, a ...interface{}) e
 }
 
 func delay(x worker, duration time.Duration, name string) error {
-	fd := myfmt.FormatDuration
 	startTime := time.Now()
 	x.log = gohelp.LogPrependSuffixKeys(x.log, "start", startTime.Format("15:04:05"))
 
@@ -27,16 +26,15 @@ func delay(x worker, duration time.Duration, name string) error {
 		x.ctx, skipDelay = context.WithTimeout(x.ctx, duration)
 		skipDelayFunc = func() {
 			skipDelay()
-			x.log.Info("задержка прервана", "elapsed", myfmt.FormatDuration(time.Since(startTime)))
+			go x.log.Info("задержка прервана", "elapsed", myfmt.FormatDuration(time.Since(startTime)))
 		}
 	}
 
 	ctxWork := x.ctx
-	return x.performf("%s: %s", name, fd(duration))(func(x worker) error {
+	return x.performf("%s: %s", name, myfmt.FormatDuration(duration))(func(x worker) error {
 		x.log.Info("задержка начата")
 		defer func() {
-			x.log.Debug("задержка окончена", "elapsed", fd(time.Since(startTime)))
-			notify.EndDelay(x.log, "")
+			notify.EndDelayf(x.log.Info, "elapsed", myfmt.FormatDuration(time.Since(startTime)))
 		}()
 		for {
 			products := last_party.CheckedProducts()
@@ -47,7 +45,7 @@ func delay(x worker, duration time.Duration, name string) error {
 			for _, p := range products {
 				for _, v := range cfg.Get().Vars {
 					_, err := readProductVar(x, p.Addr, v.Code)
-					notify.Delay(nil, types.DelayInfo{
+					go notify.Delay(nil, types.DelayInfo{
 						What:           name,
 						TotalSeconds:   int(duration.Seconds()),
 						ElapsedSeconds: int(time.Since(startTime).Seconds()),

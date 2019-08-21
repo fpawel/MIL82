@@ -6,7 +6,6 @@ import (
 	"github.com/ansel1/merry"
 	"github.com/fpawel/comm/modbus"
 	"github.com/fpawel/dseries"
-	"github.com/fpawel/gohelp"
 	"github.com/fpawel/mil82/internal/api/notify"
 	"github.com/fpawel/mil82/internal/api/types"
 	"github.com/fpawel/mil82/internal/cfg"
@@ -14,15 +13,14 @@ import (
 
 func readProductVar(x worker, addr modbus.Addr, VarCode modbus.Var) (float64, error) {
 
-	x.log = gohelp.LogPrependSuffixKeys(x.log, "адрес", addr, "var", VarCode)
 	value, err := modbus.Read3BCD(x.log, x.ctx, x.portProducts, addr, VarCode)
 	if err == nil {
-		notify.ReadVar(nil, types.AddrVarValue{Addr: addr, VarCode: VarCode, Value: value})
-		dseries.AddPoint(addr, VarCode, value)
+		go notify.ReadVar(nil, types.AddrVarValue{Addr: addr, VarCode: VarCode, Value: value})
+		go dseries.AddPoint(addr, VarCode, value)
 		return value, nil
 	}
 	if !merry.Is(err, context.Canceled) {
-		notify.AddrError(nil, types.AddrError{Addr: addr, Message: err.Error()})
+		go notify.AddrError(nil, types.AddrError{Addr: addr, Message: err.Error()})
 	}
 	return value, err
 }
