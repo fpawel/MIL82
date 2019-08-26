@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"github.com/ansel1/merry"
 	"github.com/fpawel/comm/modbus"
-	"github.com/fpawel/dseries"
 	"github.com/fpawel/mil82/internal/api/notify"
 	"github.com/fpawel/mil82/internal/api/types"
 	"github.com/fpawel/mil82/internal/cfg"
+	"github.com/fpawel/mil82/internal/dseries"
 )
 
 func readProductVar(x worker, addr modbus.Addr, VarCode modbus.Var) (float64, error) {
@@ -27,7 +27,7 @@ func readProductVar(x worker, addr modbus.Addr, VarCode modbus.Var) (float64, er
 
 func blowGas(x worker, n int) error {
 	if err := x.performf("включение клапана %d", n)(func(x worker) error {
-		return performWithWarn(x, func() error {
+		return x.performWithWarn(func() error {
 			return switchGas(x, n)
 		})
 	}); err != nil {

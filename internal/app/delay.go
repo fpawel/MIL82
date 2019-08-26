@@ -26,15 +26,15 @@ func delay(x worker, duration time.Duration, name string) error {
 		x.ctx, skipDelay = context.WithTimeout(x.ctx, duration)
 		skipDelayFunc = func() {
 			skipDelay()
-			go x.log.Info("задержка прервана", "elapsed", myfmt.FormatDuration(time.Since(startTime)))
+			x.log.Info("задержка прервана", "elapsed", myfmt.FormatDuration(time.Since(startTime)))
 		}
 	}
+	ctxRootWork := x.ctx
 
-	ctxWork := x.ctx
 	return x.performf("%s: %s", name, myfmt.FormatDuration(duration))(func(x worker) error {
 		x.log.Info("задержка начата")
 		defer func() {
-			notify.EndDelayf(x.log.Info, "elapsed", myfmt.FormatDuration(time.Since(startTime)))
+			go notify.EndDelay(x.log.Info, "elapsed", myfmt.FormatDuration(time.Since(startTime)))
 		}()
 		for {
 			products := last_party.CheckedProducts()
@@ -45,23 +45,25 @@ func delay(x worker, duration time.Duration, name string) error {
 			for _, p := range products {
 				for _, v := range cfg.Get().Vars {
 					_, err := readProductVar(x, p.Addr, v.Code)
+					if ctxRootWork.Err() != nil {
+						return ctxRootWork.Err()
+					}
+					if x.ctx.Err() != nil {
+						return nil // задержка истекла или пропущена пользователем
+					}
+					if err != nil {
+						err = merry.Appendf(err, "запрос регистра $%X", v.Code).
+							Appendf("нет связи с прибором $%X", p.Addr).
+							Append("фоновый опрос")
+						if err = x.raiseWarning(err); err != nil {
+							return err
+						}
+					}
 					go notify.Delay(nil, types.DelayInfo{
 						What:           name,
 						TotalSeconds:   int(duration.Seconds()),
 						ElapsedSeconds: int(time.Since(startTime).Seconds()),
 					})
-					if merry.Is(err, context.DeadlineExceeded) {
-						return nil // задержка истекла
-					}
-					if merry.Is(err, context.Canceled) {
-						if x.ctx.Err() == context.Canceled {
-							return nil // задержка пропущена пользователем
-						}
-						if ctxWork.Err() == context.Canceled {
-							return context.Canceled // прервано пользователем
-						}
-						return nil
-					}
 					pause(x.ctx.Done(), millis(cfg.Get().InterrogateProductVarIntervalMillis))
 				}
 			}

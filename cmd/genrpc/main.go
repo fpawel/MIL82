@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/fpawel/dseries"
 	"github.com/fpawel/gohelp/delphi/delphirpc"
 	"github.com/fpawel/mil82/internal/api"
 	"github.com/fpawel/mil82/internal/api/types"
+	"github.com/fpawel/mil82/internal/dseries"
 	"os"
 	"path/filepath"
 	r "reflect"
@@ -63,6 +63,10 @@ func main() {
 			{
 				"Status",
 				r.TypeOf((*string)(nil)).Elem(),
+			},
+			{
+				"NewChart",
+				r.TypeOf((*struct{})(nil)).Elem(),
 			},
 		},
 	})

@@ -2,10 +2,10 @@ package app
 
 import (
 	"fmt"
-	"github.com/fpawel/dseries"
 	"github.com/fpawel/gohelp/must"
 	"github.com/fpawel/mil82/internal/api"
 	"github.com/fpawel/mil82/internal/data"
+	"github.com/fpawel/mil82/internal/dseries"
 	"github.com/fpawel/mil82/internal/mil82/reporthtml"
 	"github.com/powerman/rpc-codec/jsonrpc2"
 	"github.com/tdewolff/minify"

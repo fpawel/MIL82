@@ -2,11 +2,10 @@ package app
 
 import (
 	"context"
-	"github.com/fpawel/dseries"
 	"github.com/fpawel/gohelp/winapp"
-	"github.com/fpawel/mil82/internal"
 	"github.com/fpawel/mil82/internal/api/notify"
 	"github.com/fpawel/mil82/internal/data"
+	"github.com/fpawel/mil82/internal/dseries"
 	"github.com/lxn/win"
 	"github.com/powerman/structlog"
 	"os"
@@ -26,7 +25,6 @@ func Run() {
 		log.Fatal("mil82.exe already executing")
 	}
 
-	dseries.Open(filepath.Join(internal.DataDir(), "mil82.series.sqlite"))
 	log.Println("charts: updated at", dseries.UpdatedAt())
 
 	var cancel func()
