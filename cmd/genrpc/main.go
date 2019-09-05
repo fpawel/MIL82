@@ -12,7 +12,7 @@ import (
 
 func main() {
 
-	delphirpc.WriteSources(delphirpc.SrcServices{
+	delphirpc.WriteSources("mil82", delphirpc.SrcServices{
 		Dir: filepath.Join(os.Getenv("DELPHIPATH"),
 			"src", "github.com", "fpawel", "mil82gui", "api"),
 		Types: []r.Type{
